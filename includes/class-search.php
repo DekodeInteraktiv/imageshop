@@ -359,6 +359,15 @@ class Search {
 			)
 		);
 
+		$alt_text = '';
+		if ( isset( $media->AltText ) && ! empty( $media->AltText ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->AltText` is provided by the SaaS API.
+			$alt_text = $media->AltText; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->AltText` is provided by the SaaS API.
+		} elseif ( isset( $media->Description ) && ! empty( $media->Description ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->Description` is provided by the SaaS API.
+			$alt_text = $media->Description; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->Description` is provided by the SaaS API.
+		} else {
+			$alt_text = $media->Name; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->Name` is provided by the SaaS API.
+		}
+
 		return (object) array(
 			'filename'              => $media->FileName, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FileName` is provided by the SaaS API.
 			'id'                    => $wp_post_id,
@@ -375,7 +384,7 @@ class Search {
 			'title'                 => $media->Name, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->Name` is provided by the SaaS API.
 			'url'                   => ( null !== $full_size_url ? $full_size_url : '' ), // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->ListThumbUrl` is provided by the SaaS API.
 			'menuOrder'             => 0,
-			'alt'                   => $media->Description, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->Description` is provided by the SaaS API.
+			'alt'                   => $alt_text,
 			'description'           => $media->Description, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->Description` is provided by the SaaS API.
 			'caption'               => $caption,
 			'height'                => $original_media->Height, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Height` is provided by the SaaS API.
