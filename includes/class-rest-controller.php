@@ -66,7 +66,9 @@ class REST_Controller {
 
 		// If WordPress' language function is available, attempt to set the active language.
 		if ( function_exists( 'get_user_locale' ) ) {
-			$this->set_language( \get_locale() );
+			\add_action( 'init', function() {
+				$this->set_language( \get_locale() );
+			} );
 		}
 
 		\add_action( 'rest_api_init', array( $this, 'register_routes' ) );
