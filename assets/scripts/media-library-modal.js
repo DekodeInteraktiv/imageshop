@@ -5,7 +5,7 @@
  */
 
 (function(){
-	let ImageshopOriginFilters = wp.media.view.AttachmentFilters.extend({
+	wp.media.view.AttachmentFilters.extend({
 		id: 'imageshop-media-library-origin',
 
 		createFilters: function() {
@@ -38,7 +38,7 @@
 	/**
 	 * Create a new MediaLibraryTaxonomyFilter we later will instantiate
 	 */
-	let ImageshopInterfaceFilters = wp.media.view.AttachmentFilters.extend({
+	wp.media.view.AttachmentFilters.extend({
 		id: 'imageshop-media-library-interface',
 
 		createFilters: function() {
@@ -68,7 +68,7 @@
 		}
 	});
 
-	let ImageshopPostsPerPageFilter = wp.media.view.AttachmentFilters.extend({
+	wp.media.view.AttachmentFilters.extend({
 		id: 'imageshop-posts-per-page',
 
 		createFilters: function() {
@@ -87,7 +87,7 @@
 		}
 	});
 
-	let ImageshopLanguageFilter = wp.media.view.AttachmentFilters.extend({
+	wp.media.view.AttachmentFilters.extend({
 		id: 'imageshop-media-library-language',
 
 		createFilters: function() {
@@ -129,7 +129,7 @@
 		}
 	})
 
-	let ImageshopCategoryFilters = wp.media.view.AttachmentFilters.extend({
+	wp.media.view.AttachmentFilters.extend({
 		id: 'imageshop-media-library-category',
 
 		createFilters: function() {
@@ -178,7 +178,7 @@
 	 * Extend and override wp.media.view.AttachmentsBrowser to include our new filter
 	 */
 	let AttachmentsBrowser = wp.media.view.AttachmentsBrowser;
-	wp.media.view.AttachmentsBrowser = wp.media.view.AttachmentsBrowser.extend({
+	wp.media.view.AttachmentsBrowser.extend({
 		createToolbar: function() {
 			// Make sure to load the original toolbar
 			AttachmentsBrowser.prototype.createToolbar.call( this );
