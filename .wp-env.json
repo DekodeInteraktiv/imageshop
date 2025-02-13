@@ -1,6 +1,9 @@
 {
 	"core": "WordPress/WordPress",
-	"plugins": [ "." ],
+	"plugins": [
+		".",
+		"https://downloads.wordpress.org/plugin/plugin-check.zip"
+	],
 	"config": {
 		"WP_DEBUG": true,
 		"SCRIPT_DEBUG": true,
