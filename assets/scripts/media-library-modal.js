@@ -44,16 +44,18 @@
 		createFilters: function() {
 			var filters = {};
 			// Formats the 'terms' we've included via wp_localize_script()
-			_.each( ImageshopMediaLibrary.interfaces || {}, function( value, index ) {
-				filters[ value.Id ] = {
-					text: value.Name,
-					props: {
-						// Change this: key needs to be the WP_Query var for the taxonomy
-						imageshop_interface: value.Id,
-						dataTest: 'nope',
-					},
-					selected: ( ImageshopMediaLibrary.default_interface.toString() === value.Id.toString() ),
-				};
+			_.each( ImageshopMediaLibrary.interfaces || [], function( value, index ) {
+				if ( value.Id && value.Name ) {
+					filters[ value.Id ] = {
+						text: value.Name,
+						props: {
+							// Change this: key needs to be the WP_Query var for the taxonomy
+							imageshop_interface: value.Id,
+							dataTest: 'nope',
+						},
+						selected: ( ImageshopMediaLibrary.default_interface.toString() === value.Id.toString() ),
+					};
+				}
 			});
 			filters.all = {
 				// Change this: use whatever default label you'd like
