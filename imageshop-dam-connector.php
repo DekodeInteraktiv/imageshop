@@ -6,7 +6,7 @@
  * Version: 1.1.0
  * Author: Imageshop
  * Author URI: https://imageshop.org
- * License: MIT
+ * License: GPLv2
  * Text Domain: imageshop-dam-connector
  * Domain Path: /languages
  * Requires PHP: 5.6
