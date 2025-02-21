@@ -3,7 +3,7 @@ Tags: media library, media cdn, DAM
 Requires at least: 5.6
 Requires PHP: 5.6
 Tested up to: 6.7
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,12 @@ If you at any point wish to stop using Imageshop for your files, you can export 
 We welcome both suggestions, discussions, and code! Check out the project source at https://github.com/DekodeInteraktiv/imageshop
 
 == Changelog ==
+
+= 1.1.1 (2025-02-21) =
+* Media filer: Fix a fatal error when the available interfaces list is empty.
+* Attachments: Import the new `AltText` attribute from the Imageshop API.
+* Translations: Updated when translations are loaded, to follow the best practice since WordPress 6.7
+* General: Updated tested with attributes.
 
 = 1.1.0 (2024-02-22) =
 * Search: Ignore image mime-types when the image is served by Imageshop, these are always valid and checked by the Imageshop API.
