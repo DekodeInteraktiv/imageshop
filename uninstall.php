@@ -1,6 +1,9 @@
 <?php
 /**
  * Plugin uninstall handler.
+ *
+ * @phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- We use direct database queries for performance during the uninstall procedure.
+ * @phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching -- No do not want ot cache these queries, as they are removing database entries and will never be re-used.
  */
 
 declare( strict_types = 1 );
@@ -68,3 +71,6 @@ foreach ( $attachments as $attachment ) {
 $wpdb->query( "DELETE FROM {$wpdb->posts} WHERE ID IN (" . \implode( ',', $removable ) . ')' ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- We need to implode a variable to use the `IN` SQL operator.
 $wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE post_id IN (" . \implode( ',', $removable ) . ')' ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- We need to implode a variable to use the `IN` SQL operator.
 $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '%imageshop%'" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- We are doing a non-variable query.
+
+// Flush the caches, necessary to prevent errant database values being kept in memory after removing the plugin.
+\wp_cache_flush();
