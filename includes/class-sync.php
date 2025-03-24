@@ -354,11 +354,11 @@ class Sync {
 					\printf(
 						// translators: 1: Current progress. 2: Total items to import.
 						\esc_html__(
-							'%1$s of %2$s attachments imported to Imageshop',
+							'%1$d of %2$d attachments imported to Imageshop',
 							'imageshop-dam-connector'
 						),
-						$status['imported'],
-						$status['total']
+						\esc_html( $status['imported'] ),
+						\esc_html( $status['total'] )
 					)
 				?>
 			</progress>
