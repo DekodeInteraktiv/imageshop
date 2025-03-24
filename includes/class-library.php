@@ -163,7 +163,7 @@ class Library {
 			return;
 		}
 
-		if ( \stristr( $_SERVER['REQUEST_URI'], 'upload.php?mode=' ) ) {
+		if ( \stristr( $_SERVER['REQUEST_URI'], 'upload.php?mode=' ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Only used for direct comparison in a conditional.
 			$_GET['mode'] = 'grid';
 		}
 	}

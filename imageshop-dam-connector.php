@@ -34,7 +34,7 @@ require_once __DIR__ . '/includes/class-sync.php';
 function imageshop_incompatibile( $msg ) {
 	require_once ABSPATH . DIRECTORY_SEPARATOR . 'wp-admin' . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'plugin.php';
 	\deactivate_plugins( __FILE__ );
-	\wp_die( $msg );
+	\wp_die( \esc_html( $msg ) );
 }
 
 // Validate that the plugin is compatible when being activated.
