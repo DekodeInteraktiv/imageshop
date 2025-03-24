@@ -870,7 +870,7 @@ class Attachment {
 				! empty( $metadata['sizes'][ $key ]['imageshop_permalink'] )
 				|| ( 'full' === $key ) && ! empty( $metadata['imageshop_permalink'] )
 			) {
-				\unlink( $filepath );
+				\wp_delete_file( $filepath );
 			}
 		}
 
