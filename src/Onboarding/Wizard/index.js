@@ -5,7 +5,6 @@ import './wizard.scss';
 import Introduction from "./Steps/Introduction";
 import Tokens from "./Steps/Tokens";
 import Interfaces from "./Steps/Interfaces";
-import Import from "./Steps/Import";
 import Completed from "./Steps/Completed";
 
 const Wizard = ( { setShowWizard, setShowNotice } ) => {
@@ -38,9 +37,6 @@ const Wizard = ( { setShowWizard, setShowNotice } ) => {
 								<Interfaces setStep={ setStep } />
 							}
 							{ 4 === step &&
-								<Import setStep={ setStep } />
-							}
-							{ 5 === step &&
 								<Completed setShowNotice={ setShowNotice } setShowWizard={ setShowWizard } />
 							}
 						</div>

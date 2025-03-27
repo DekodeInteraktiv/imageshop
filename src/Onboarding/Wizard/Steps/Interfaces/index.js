@@ -67,7 +67,7 @@ const Interfaces = ( { setStep } ) => {
 			<div className="imageshop-modal-actions">
 				{ apiInterface &&
 					<button type="button" className="button button-primary" onClick={ () => setStep( 4 ) }>
-						{ __( 'Continue to imports', 'imageshop-dam-connector' ) }
+						{ __( 'Next step', 'imageshop-dam-connector' ) }
 					</button>
 				}
 			</div>

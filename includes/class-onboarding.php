@@ -78,69 +78,6 @@ class Onboarding {
 				),
 			)
 		);
-
-		\register_rest_route(
-			'imageshop/v1',
-			'onboarding/import',
-			array(
-				array(
-					'methods'             => \WP_REST_Server::CREATABLE,
-					'callback'            => array( $this, 'rest_import_media_start' ),
-					'permission_callback' => array( $this, 'user_can_setup_plugin' ),
-				),
-				array(
-					'methods'             => \WP_REST_Server::READABLE,
-					'callback'            => array( $this, 'rest_import_media_status' ),
-					'permission_callback' => array( $this, 'user_can_setup_plugin' ),
-				),
-			)
-		);
-
-		\register_rest_route(
-			'imageshop/v1',
-			'onboarding/completed',
-			array(
-				'methods'             => \WP_REST_Server::READABLE,
-				'callback'            => array( $this, 'rest_completed' ),
-				'permission_callback' => array( $this, 'user_can_setup_plugin' ),
-			)
-		);
-	}
-
-	/**
-	 * Register that the onboarding has been completed.
-	 *
-	 * @return \WP_REST_Response
-	 */
-	function rest_completed() {
-		\update_option( 'imageshop_onboarding_completed', true );
-
-		return new \WP_REST_Response( true, 200 );
-	}
-
-	/**
-	 * Return the current status of exporting media from WordPress to Imageshop.
-	 *
-	 * @return \WP_REST_Response
-	 */
-	function rest_import_media_status() {
-		$sync = Sync::get_instance();
-
-		return new \WP_REST_Response(
-			$sync->get_media_import_status(),
-			200
-		);
-	}
-
-	/**
-	 * Start the export process of media from WordPress to Imageshop.
-	 *
-	 * @return \WP_REST_Response
-	 */
-	function rest_import_media_start() {
-		$sync = Sync::get_instance();
-
-		return $sync->sync_remote();
 	}
 
 	/**
