@@ -2,8 +2,8 @@
 Tags: media library, media cdn, DAM
 Requires at least: 6.2
 Requires PHP: 5.6
-Tested up to: 6.7
-Stable tag: 1.1.1
+Tested up to: 6.8
+Stable tag: 1.1.2
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,13 @@ If you at any point wish to stop using Imageshop for your files, you can export 
 We welcome both suggestions, discussions, and code! Check out the project source at https://github.com/DekodeInteraktiv/imageshop
 
 == Changelog ==
+
+= 1.1.2 (2025-04-04) =
+* Media filter: Ensure filters are always rendered after the error fixes in 1.1.1
+* Settings: Fixed error preventing feedback messages from rendering.
+* Onboarding: Removed import options form the onboarding wizard, the feature exists within the settings page, but removes potential confusion during setup.
+* Compatibility: Properly flush caches when the plugin is uninstalled.
+* Compatibility: Ensure the plugin is compatible with WordPress 6.8.
 
 = 1.1.1 (2025-02-21) =
 * Media filer: Fix a fatal error when the available interfaces list is empty.
