@@ -28,7 +28,7 @@ imageshopSyncToImageshop.addEventListener( 'click', function() {
 		.then( function( response ) {
 			imageshopLoadingIndicator.style.display = 'none';
 
-			imageshopMessage.innerHTML = response.data.message;
+			imageshopMessage.innerHTML = response.message;
 		} );
 } );
 
@@ -42,6 +42,6 @@ imageshopSyncToLocal.addEventListener( 'click', function() {
 		.then( function( response ) {
 			imageshopLoadingIndicator.style.display = 'none';
 
-			imageshopMessage.innerHTML = response.data.message;
+			imageshopMessage.innerHTML = response.message;
 		} );
 } );

@@ -33,3 +33,10 @@
 #message {
 	margin: 0;
 }
+
+.imageshop__message {
+	margin-left: 0;
+}
+.imageshop__message:empty {
+	display: none;
+}

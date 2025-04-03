@@ -22,8 +22,6 @@ $disable_srcset    = \get_option( 'imageshop_disable_srcset' );
 
 	<div class="col-xs-12 col-sm-12 col-md-8 col-lg-8">
 
-		<div class="imageshop__message"></div>
-
 		<div class="row">
 
 			<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
@@ -51,6 +49,8 @@ $disable_srcset    = \get_option( 'imageshop_disable_srcset' );
 			</div>
 
 		</div>
+
+		<div class="imageshop__message notice notice-info"></div>
 
 		<form method="POST" action="options.php">
 			<?php \settings_fields( 'imageshop_settings' ); ?>
