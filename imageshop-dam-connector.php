@@ -45,11 +45,7 @@ function imageshop_incompatibile( $msg ) {
 			if ( \version_compare( PHP_VERSION, '5.6', '<' ) ) {
 				imageshop_incompatibile(
 					\sprintf(
-						// translators: %s is the PHP version.
-						__(
-							'The Imageshop Media Library plugin requires PHP version 5.6 or higher. This site uses PHP version %s, which has caused the plugin to be automatically deactivated.',
-							'imageshop-dam-connector'
-						),
+						'The Imageshop Media Library plugin requires PHP version 5.6 or higher. This site uses PHP version %s, which has caused the plugin to be automatically deactivated.',
 						PHP_VERSION
 					)
 				);
