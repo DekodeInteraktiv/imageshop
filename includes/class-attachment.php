@@ -1084,6 +1084,24 @@ class Attachment {
 			return null;
 		}
 
+		// If the last section is a filename, or there is no filename, we strip this off, and run the filename converter.
+		// By doing this in both cases means we can have future file formats supported on cached entries as well.
+		$key_url = $image_sizes[ $size_key ]['source_url' ];
+		$key_url_parts = explode( '/', $key_url );
+		$filename_section = end( $key_url_parts );
+		if ( empty( $filename_section ) || substr_count( $filename_section, '.' ) > 1 ) {
+			$filename = $this->get_attachment_filename( $attachment->ID, $filename );
+
+			// We remove the final entry from the array, as this is the filename, or an empty segment.
+			array_pop( $key_url_parts );
+
+			// We then append the new filename to the array before joining them together again.
+			$key_url_parts[] = $filename;
+		}
+
+		// Rejoin the URL parts together.
+		$image_sizes[ $size_key ]['source_url'] = implode( '/', $key_url_parts );
+
 		return $image_sizes[ $size_key ];
 	}
 
@@ -1276,14 +1294,25 @@ class Attachment {
 			sprintf(
 				'%s/%s',
 				\untrailingslashit( $imageshop->create_permalinks_url( $media_id, $width, $height, $this->get_attachment_permalink_token_base( $attachment->ID ) ) ), // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` is defined by the SaaS API.
-				urlencode( $this->get_attachment_filename( $attachment->ID ) )
+				urlencode( $this->get_attachment_filename( $attachment->ID, $media->Filename ) ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FileName` is provided by the SaaS API.
 			)
 		);
 	}
 
-	private function get_attachment_filename( $attach_id ) {
-		$filename = \get_post_meta( $attach_id, '_wp_attached_file', true );
-		$filename = basename( $filename );
+	private function get_attachment_filename( $attach_id, $filename = null ) {
+		if ( empty( $filename ) ) {
+			$filename = \get_post_field( 'post_name', $attach_id );
+			$filename = basename( $filename );
+		}
+
+		// Strip the file extension (if it exists) from the filename, so that we can sanitize the name.
+		$filename = \pathinfo( $filename, PATHINFO_FILENAME );
+
+		// We sanitize the remaining filename to remove characters which some browsers or locales may not support properly.
+		$filename = \sanitize_title( $filename );
+
+		// Append a file extension for the file, this is always `.jpg` (unless webp support is enabled).
+		$filename .= '.jpg';
 
 		return $filename;
 	}
