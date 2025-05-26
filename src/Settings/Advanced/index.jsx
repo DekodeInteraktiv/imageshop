@@ -6,17 +6,37 @@ export default function Advanced( { settings, updateSettings } ) {
 		updateSettings( { disable_srcset: newState ? 'yes' : 'no' } );
 	}
 
+	const updateWebpSupportSetting = ( newState ) => {
+		updateSettings( { webp_support: newState ? 'yes' : 'no' } )
+	}
+
 	return (
 		<div className="imageshop-advanced">
 
 			<div className="grid grid-cols-1 gap-2 w-full md:max-w-lg">
 				<div className="grid grid-cols-1 gap-2">
-					<label>{ __( 'Imageshop Key:', 'imageshop-dam-connector' ) }</label>
 					<label>
 						<input
 							type="checkbox"
-							placeholder={ __( 'Enter your Imageshop key', 'imageshop-dam-connector' ) }
-							className="w-full"
+							checked={ settings.webp_support === 'yes' }
+							onChange={ ( event ) => updateWebpSupportSetting( event.target.checked ) }
+						/>
+						<span>
+							{ __( 'Enable WebP image support', 'imageshop-dam-connector' ) }
+						</span>
+					</label>
+
+					<p>
+						{ __( 'WebP is a modern image format optimized for websites, not all themes support WebP images, but when possible you may gain some performance improvement by enabling this feature.', 'imageshop-dam-connector' ) }
+					</p>
+				</div>
+
+				<hr />
+
+				<div className="grid grid-cols-1 gap-2">
+					<label>
+						<input
+							type="checkbox"
 							checked={ settings.disable_srcset === 'yes' }
 							onChange={ ( event ) => updateSrcsetSetting( event.target.checked ) }
 						/>
