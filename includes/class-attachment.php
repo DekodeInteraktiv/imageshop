@@ -1312,7 +1312,12 @@ class Attachment {
 		$filename = \sanitize_title( $filename );
 
 		// Append a file extension for the file, this is always `.jpg` (unless webp support is enabled).
-		$filename .= '.jpg';
+		$use_webp = \get_option( 'imageshop_webp_support', 'no' );
+		if ( 'yes' === $use_webp ) {
+			$filename .= '.webp';
+		} else {
+			$filename .= '.jpg';
+		}
 
 		return $filename;
 	}

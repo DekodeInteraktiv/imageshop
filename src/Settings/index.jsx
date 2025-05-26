@@ -44,6 +44,7 @@ export default function Settings() {
 					api_key: settings.api_key,
 					default_interface: settings.default_interface,
 					disable_srcset: settings.disable_srcset,
+					webp_support: settings.webp_support,
 				}
 			}
 		).then( ( response ) => {
