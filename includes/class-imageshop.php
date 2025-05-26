@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 namespace Imageshop\WordPress;
 
+use Imageshop\WordPress\REST\Settings;
+
 /**
  * Imageshop Media Library main class.
  */
@@ -84,6 +86,8 @@ class Imageshop {
 		Onboarding::get_instance();
 		Search::get_instance();
 		Sync::get_instance();
+
+		new Settings();
 	}
 
 	public static function available_locales() {
@@ -136,16 +140,16 @@ class Imageshop {
 			return;
 		}
 
+		$asset = require_once IMAGESHOP_ABSPATH . '/build/settings.asset.php';
+
+		\wp_enqueue_style( 'imageshop-settings', \plugins_url( 'build/settings.css', IMAGESHOP_PLUGIN_BASE_NAME ), array(), $asset['version'] );
 		\wp_enqueue_script(
 			'imageshop-settings',
-			plugins_url( '/assets/scripts/settings.js', IMAGESHOP_PLUGIN_BASE_NAME ),
-			array( 'wp-api-fetch' ),
-			'1.4.0',
+			\plugins_url( 'build/settings.js', IMAGESHOP_PLUGIN_BASE_NAME ),
+			$asset['dependencies'],
+			$asset['version'],
 			true
 		);
-
-		\wp_enqueue_style( 'flexboxgrid', \plugins_url( '/assets/styles/flexboxgrid.min.css', IMAGESHOP_PLUGIN_BASE_NAME ) );
-		\wp_enqueue_style( 'imageshop-settings', \plugins_url( '/assets/styles/settings.css', IMAGESHOP_PLUGIN_BASE_NAME ), array( 'flexboxgrid' ) );
 	}
 
 	/**
@@ -161,7 +165,7 @@ class Imageshop {
 	 * Register settings page.
 	 */
 	public function register_setting_page() {
-		include_once( IMAGESHOP_ABSPATH . '/admin/settings-page.php' );
+		echo '<div id="imageshop-settings"></div>';
 	}
 
 	/**

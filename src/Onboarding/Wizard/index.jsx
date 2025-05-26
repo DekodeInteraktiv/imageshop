@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { __ } from '@wordpress/i18n';
 
-import './wizard.scss';
+import './wizard.pcss';
 import Introduction from "./Steps/Introduction";
 import Tokens from "./Steps/Tokens";
 import Interfaces from "./Steps/Interfaces";

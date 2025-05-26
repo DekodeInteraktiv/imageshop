@@ -2,15 +2,17 @@
 	"name": "imageshop",
 	"version": "1.0.0",
 	"devDependencies": {
+		"@heroicons/react": "^2.2.0",
 		"@wordpress/env": "^10.20.0",
 		"@wordpress/scripts": "^27.9.0",
 		"@wordpress/stylelint-config": "^23.12.0",
 		"react": "^18.2.0",
-		"react-dom": "^18.2.0"
+		"react-dom": "^18.2.0",
+		"tailwindcss": "^4.1.7"
 	},
 	"scripts": {
-		"build": "wp-scripts build src/onboarding.js",
-		"start": "wp-scripts start src/onboarding.js",
+		"build": "wp-scripts build",
+		"start": "wp-scripts start --hot",
 		"wp-env": "wp-env",
 		"lint-js": "wp-scripts lint-js",
 		"lint-css": "wp-scripts lint-css",
@@ -26,5 +28,9 @@
 		"readme.txt",
 		"uninstall.php",
 		"changelog.txt"
-	]
+	],
+	"dependencies": {
+		"@tailwindcss/postcss": "^4.1.7",
+		"postcss": "^8.5.3"
+	}
 }

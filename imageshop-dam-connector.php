@@ -22,6 +22,37 @@ namespace Imageshop\WordPress;
 \define( 'IMAGESHOP_ABSPATH', __DIR__ );
 \define( 'IMAGESHOP_PLUGIN_BASE_NAME', __FILE__ );
 
+/*
+ * Autoloader to ensure our namespace can autoload files seamlessly.
+ */
+\spl_autoload_register( function ( $class ) {
+	// Project-specific namespace
+	$prefix = __NAMESPACE__;
+	$base_dir = __DIR__ . '/includes/';
+
+	// Do not try to autoload anything outside our namespace.
+	if ( substr( $class, 0, \strlen( $prefix ) ) !== $prefix ) {
+		return;
+	}
+
+	// Remove the namespace prefix from the classname to get the relative path.
+	$relative_class = \substr( $class, \strlen( $prefix ) );
+
+	// Replace namespace separators with directory separators in the relative class name.
+	$relative_class = \str_replace( '\\', '/', $relative_class );
+
+	$file = $relative_class . '.php';
+
+	// Validate the file using WordPress' `validate_file` function.
+	if ( \validate_file( $file ) > 0 ) {
+		return;
+	}
+
+	if ( \file_exists( $base_dir . $file ) ) {
+		require $base_dir . $file;
+	}
+} );
+
 require_once __DIR__ . '/includes/class-imageshop.php';
 require_once __DIR__ . '/includes/class-attachment.php';
 require_once __DIR__ . '/includes/class-helpers.php';
