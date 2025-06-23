@@ -1,4 +1,5 @@
 import { __ } from '@wordpress/i18n';
+import Sections, {Section, SectionDescription, SectionHeader, SectionTitle} from "../../components/Sections";
 
 export default function Advanced( { settings, updateSettings } ) {
 
@@ -11,49 +12,60 @@ export default function Advanced( { settings, updateSettings } ) {
 	}
 
 	return (
-		<div className="imageshop-advanced">
+		<div>
+			<Sections>
+				<Section>
+					<SectionHeader>
+						<SectionTitle>
+							{ __( 'WebP image support', 'imageshop-dam-connector' ) }
+						</SectionTitle>
+						<SectionDescription>
+							{ __( 'WebP is a modern image format that can significantly reduce file sizes while maintaining quality. This setting allows you to enable or disable WebP support in your media library.', 'imageshop-dam-connector' ) }
+						</SectionDescription>
+					</SectionHeader>
 
-			<div className="grid grid-cols-1 gap-2 w-full md:max-w-lg">
-				<div className="grid grid-cols-1 gap-2">
-					<label>
-						<input
-							type="checkbox"
-							checked={ settings.webp_support === 'yes' }
-							onChange={ ( event ) => updateWebpSupportSetting( event.target.checked ) }
-						/>
-						<span>
-							{ __( 'Enable WebP image support', 'imageshop-dam-connector' ) }
-						</span>
-					</label>
+					<div>
+						<label className="inline-block py-2">
+							<input
+								type="checkbox"
+								checked={ settings.webp_support === 'yes' }
+								onChange={ ( event ) => updateWebpSupportSetting( event.target.checked ) }
+							/>
+							<span>
+								{ __( 'Enable WebP image support', 'imageshop-dam-connector' ) }
+							</span>
+						</label>
+					</div>
 
-					<p>
-						{ __( 'WebP is a modern image format optimized for websites, not all themes support WebP images, but when possible you may gain some performance improvement by enabling this feature.', 'imageshop-dam-connector' ) }
-					</p>
-				</div>
+				</Section>
 
-				<hr />
+				<Section>
+					<SectionHeader>
+						<SectionTitle>
+							{ __( 'Extended srcset attributes', 'imageshop-dam-connector' ) }
+						</SectionTitle>
+						<SectionDescription>
+							{ __( 'Some users may experience performance issues when working with pages containing many manually added images that have not been processed by WordPress or Imageshop. This option will disable the extra processing performed to guarantee srcset attributes are applied.', 'imageshop-dam-connector' ) }
+						</SectionDescription>
+						<SectionDescription className="italic">
+							{ __( 'Note that this may cause SEO warnings where large images are being loaded on your site, and should only be used if you are experiencing explicit performance issues.', 'imageshop-dam-connector' ) }
+						</SectionDescription>
+					</SectionHeader>
 
-				<div className="grid grid-cols-1 gap-2">
-					<label>
-						<input
-							type="checkbox"
-							checked={ settings.disable_srcset === 'yes' }
-							onChange={ ( event ) => updateSrcsetSetting( event.target.checked ) }
-						/>
-						<span>
-							{ __( 'Disable extended srcset attributes', 'imageshop-dam-connector' ) }
-						</span>
-					</label>
-
-					<p>
-						{ __( 'Some users may experience performance issues when working with pages containing many manually added images that have not been processed by WordPress or Imageshop. This option will disable the extra processing performed to guarantee srcset attributes are applied.', 'imageshop-dam-connector' ) }
-					</p>
-					<p className="italic">
-						{ __( 'Note that this may cause SEO warnings where large images are being loaded on your site, and should only be used if you are experiencing explicit performance issues.', 'imageshop-dam-connector' ) }
-					</p>
-				</div>
-			</div>
-
+					<div>
+						<label className="inline-block py-2">
+							<input
+								type="checkbox"
+								checked={ settings.disable_srcset === 'yes' }
+								onChange={ ( event ) => updateSrcsetSetting( event.target.checked ) }
+							/>
+							<span>
+								{ __( 'Disable extended srcset attributes', 'imageshop-dam-connector' ) }
+							</span>
+						</label>
+					</div>
+				</Section>
+			</Sections>
 		</div>
 	)
 }

@@ -1,9 +1,17 @@
 import React from 'react';
+import { __ } from '@wordpress/i18n';
+import clsx from "clsx";
 
 function Tab( { label, isActive, onClick } ) {
+	const classNames = clsx(
+		'py-2 px-4 cursor-pointer whitespace-nowrap flex justify-start items-center gap-4 rounded-md transition-colors',
+		'hover:bg-accent/40 hover:text-black',
+		isActive && 'bg-primary text-white'
+	)
+
 	return (
 		<button
-			className={`p-2 rounded-t-md border-1 border-b-transparent cursor-pointer hover:bg-white ${isActive ? 'text-primary bg-white border-b-primary' : 'border-b-white'}`}
+			className={ classNames }
 			onClick={onClick}
 		>
 			{label}
@@ -13,7 +21,7 @@ function Tab( { label, isActive, onClick } ) {
 
 export default function Tabs({ tabs, activeTab, setActiveTab }) {
 	return (
-		<div className="flex flex-row justify-center gap-4">
+		<nav aria-label={__('Tabs', 'imageshop-dam-connector')} className="grid grid-cols-1 gap-2">
 			{Object.entries(tabs).map(([key, { label }]) => (
 				<Tab
 					key={key}
@@ -22,6 +30,6 @@ export default function Tabs({ tabs, activeTab, setActiveTab }) {
 					onClick={() => setActiveTab(key)}
 				/>
 			))}
-		</div>
+		</nav>
 	)
 }
