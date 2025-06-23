@@ -9,14 +9,18 @@ const Completed = ( { setShowWizard, setShowNotice } ) => {
 
 	return (
 		<>
-			<p>
-				{ __( 'Your site has now been configured to use all media via Imageshop.', 'imageshop-dam-connector' ) }
-			</p>
+			<div className="p-4">
+				<p>
+					{ __( 'Your site has now been configured to use all media via Imageshop.', 'imageshop-dam-connector' ) }
+				</p>
+			</div>
 
-			<div className="imageshop-modal-actions">
-				<button type="button" className="button button-primary" onClick={ () => closeOnboarding() }>
-					{ __( 'Finish setup', 'imageshop-dam-connector' ) }
-				</button>
+			<div className="bg-gray-50 p-4 rounded-b-lg">
+				<div className="flex justify-end gap-4">
+					<button type="button" className="cursor-pointer bg-primary py-2 px-4 text-white rounded-md hover:bg-accent" onClick={ () => closeOnboarding() }>
+						{ __( 'Finish setup', 'imageshop-dam-connector' ) }
+					</button>
+				</div>
 			</div>
 		</>
 	)

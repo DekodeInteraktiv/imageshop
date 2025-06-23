@@ -54,22 +54,30 @@ const Interfaces = ( { setStep } ) => {
 
 	return (
 		<>
-			<p>
-				{ __( 'Interfaces determine where files are stored in your Imageshop account.', 'imageshop-dam-connector')}
-			</p>
+			<div className="p-4">
+				<p>
+					{ __( 'When uploading files to WordPress, the files are automatically stored in your preferred interface on the Imageshop platform. If you wish to keep your website media separate, you can always reach out to have a dedicated WordPress interface created for you.', 'imageshop-dam-connector' ) }
+				</p>
 
-			<SelectControl
-				label={ __( 'Select which interface is used for uploaded media files', 'imageshop-dam-connector' ) }
-				options={ availableInterfaces }
-				onChange={ ( selection ) => setApiInterface( selection ) }
-			/>
+				<SelectControl
+					label={ __( 'Select which interface is used for uploaded media files', 'imageshop-dam-connector' ) }
+					options={ availableInterfaces }
+					onChange={ ( selection ) => setApiInterface( selection ) }
+					className="w-full"
+				/>
+			</div>
 
-			<div className="imageshop-modal-actions">
-				{ apiInterface &&
-					<button type="button" className="button button-primary" onClick={ () => setStep( 4 ) }>
+			<div className="bg-gray-50 p-4 rounded-b-lg">
+				<div className="flex justify-end gap-4">
+					{ ! apiInterface &&
+						<span className="italic">
+							{ __( 'Please select an interface before proceeding.', 'imageshop-dam-connector' ) }
+						</span>
+					}
+					<button type="button" disabled={ ! apiInterface } className="cursor-pointer bg-primary py-2 px-4 text-white rounded-md hover:bg-accent" onClick={ () => setStep( 4 ) }>
 						{ __( 'Next step', 'imageshop-dam-connector' ) }
 					</button>
-				}
+				</div>
 			</div>
 		</>
 	)

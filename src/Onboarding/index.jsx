@@ -4,7 +4,7 @@ import Notice from './Notice';
 
 import './onboarding.pcss';
 
-const Onboarding1 = () => {
+const Onboarding = () => {
 	return (
 		<>
 			<Notice />
@@ -12,4 +12,4 @@ const Onboarding1 = () => {
 	)
 }
 
-export default Onboarding1;
+export default Onboarding;

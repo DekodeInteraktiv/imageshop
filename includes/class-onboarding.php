@@ -134,12 +134,14 @@ class Onboarding {
 	 *
 	 * @param \WP_REST_Request $request
 	 *
-	 * @return void
+	 * @return \WP_REST_Response
 	 */
 	public function rest_set_interface( \WP_REST_Request $request ) {
 		$interface = $request->get_param( 'interface' );
 
 		\update_option( 'imageshop_upload_interface', $interface );
+
+		return new \WP_REST_Response( [ 'success' => true ] );
 	}
 
 	/**

@@ -2,6 +2,7 @@ import { __ } from '@wordpress/i18n';
 import { useState } from 'react';
 import apiFetch from '@wordpress/api-fetch';
 import {ExclamationCircleIcon, InformationCircleIcon} from "@heroicons/react/24/solid";
+import Sections, {Section, SectionDescription, SectionHeader, SectionTitle} from "../../components/Sections";
 
 export default function Sync( { settings, refreshSettings } ) {
 	const [ syncMessage, setSyncMessage ] = useState( null );
@@ -31,7 +32,7 @@ export default function Sync( { settings, refreshSettings } ) {
 	}
 
 	return (
-		<div className="grid grid-cols-1 gap-2 w-full">
+		<div>
 			<p>
 				{ __( 'The Imageshop plugin will automatically replace your Media Library with the Imageshop media bank, giving you direct access to your organizations entire media portfolio.', 'imageshop-dam-connector' ) }
 			</p>
@@ -47,27 +48,37 @@ export default function Sync( { settings, refreshSettings } ) {
 				</p>
 			) }
 
-			<div>
-				<button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-accent cursor-pointer transition-colors">
-					{ __( 'Sync WordPress images to the Imageshop cloud', 'imageshop-dam-connector' ) }
-				</button>
+			<Sections>
+				<Section>
+					<SectionHeader>
+						<SectionTitle>
+							{ __( 'Sync WordPress to Imageshop', 'imageshop-dam-connector' ) }
+						</SectionTitle>
+						<SectionDescription>
+							{ __( 'This will upload all images in your WordPress media library to the Imageshop cloud, ensuring that all your media is available in the Imageshop platform.', 'imageshop-dam-connector' ) }
+						</SectionDescription>
+					</SectionHeader>
 
-				<p>
-					{ __( 'This will upload all images in your WordPress media library to the Imageshop cloud, ensuring that all your media is available in the Imageshop platform.', 'imageshop-dam-connector' ) }
-				</p>
-			</div>
+					<button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-accent/40 hover:text-black cursor-pointer transition-colors">
+						{ __( 'Sync WordPress images to the Imageshop cloud', 'imageshop-dam-connector' ) }
+					</button>
+				</Section>
 
-			<hr />
+				<Section>
+					<SectionHeader>
+						<SectionTitle>
+							{ __( 'Sync Imageshop to WordPress', 'imageshop-dam-connector' ) }
+						</SectionTitle>
+						<SectionDescription>
+							{ __( 'This will download all images used in a post or page in WordPress from the Imageshop cloud to your local media library, ensuring that all your media is available if the plugin is removed.', 'imageshop-dam-connector' ) }
+						</SectionDescription>
+					</SectionHeader>
 
-			<div>
-				<button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-accent cursor-pointer transition-colors">
-					{ __( 'Sync Imageshop images to the WordPress media library', 'imageshop-dam-connector' ) }
-				</button>
-
-				<p>
-					{ __( 'This will download all images used in a post or page in WordPress from the Imageshop cloud to your local media library, ensuring that all your media is available if the plugin is removed.', 'imageshop-dam-connector' ) }
-				</p>
-			</div>
+					<button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-accent/40 hover:text-black cursor-pointer transition-colors">
+						{ __( 'Sync Imageshop images to the WordPress media library', 'imageshop-dam-connector' ) }
+					</button>
+				</Section>
+			</Sections>
 		</div>
 	)
 }

@@ -33,7 +33,7 @@ const Notice = () => {
 
 	return (
 		<>
-			<div className="notice notice-warning inline">
+			<div className="notice notice-warning update-nag inline">
 				<h2>
 					{ __( 'Imageshop setup', 'imageshop-dam-connector' ) }
 				</h2>
