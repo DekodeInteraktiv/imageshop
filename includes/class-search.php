@@ -16,6 +16,15 @@ class Search {
 	private $attachment;
 	private static $instance;
 
+	private array $search_attributes = array(
+		'Pagesize'      => 25,
+		'Querystring'   => null,
+		'SortDirection' => null,
+		'Page'          => null,
+		'InterfaceIds'  => null,
+		'CategoryIds'   => null,
+	);
+
 	/**
 	 * Class constructor.
 	 */
@@ -125,7 +134,7 @@ class Search {
 			}
 		}
 
-		$search_attributes = array(
+		$this->search_attributes = array(
 			'Pagesize'      => 25,
 			'Querystring'   => null,
 			'SortDirection' => null,
@@ -138,16 +147,16 @@ class Search {
 			$this->imageshop->set_language( $_POST['query']['imageshop_language'] );
 		}
 
-		$search_attributes = $this->validate_and_assign_search_attributes( $search_attributes, $_POST['query'] );
+		$this->search_attributes = $this->validate_and_assign_search_attributes( $this->search_attributes, $_POST['query'] );
 
-		$search_results = $this->imageshop->search( $search_attributes );
+		$search_results = $this->imageshop->search( $this->search_attributes );
 
 		\header( 'X-WP-Total: ' . (int) $search_results->NumberOfDocuments ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$search_Results->NumberOfDocuments` is provided by the SaaS API.
-		\header( 'X-WP-TotalPages: ' . (int) ceil( ( $search_results->NumberOfDocuments / $search_attributes['Pagesize'] ) ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$search_results->NumberOfDocuments` and `$search_attributes['Pagesize']` are provided by the SaaS API.
+		\header( 'X-WP-TotalPages: ' . (int) ceil( ( $search_results->NumberOfDocuments / $this->search_attributes['Pagesize'] ) ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$search_results->NumberOfDocuments` and `$search_attributes['Pagesize']` are provided by the SaaS API.
 
 		foreach ( $search_results->DocumentList as $result ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$search_results->DocumentList` is provided by the SaaS API.
 			$this->attachment->append_document( $result->DocumentID, $result ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$result->DocumentID` is provided by the SaaS API.
-			$media[] = $this->imageshop_pseudo_post( $result, ( isset( $search_attributes['InterfaceIds'] ) ? $search_attributes['InterfaceIds'][0] : null ) );
+			$media[] = $this->imageshop_pseudo_post( $result, ( isset( $this->search_attributes['InterfaceIds'] ) ? $this->search_attributes['InterfaceIds'][0] : null ) );
 		}
 
 		\wp_send_json_success( $media );
