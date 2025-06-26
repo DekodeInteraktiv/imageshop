@@ -1138,7 +1138,7 @@ class Attachment {
 
 		foreach ( $media->SubDocumentList as $document ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->SubDocumentList` is defined by the SaaS API.
 			// The version name given to an original file is not consistent, but generally prefixed with "Original".
-			if ( \substr( \strtolower( $document->VersionName ), 0, 8 ) === 'original' ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$document->VersionName` is defined by the SaaS API.
+			if ( ! empty( $document->VersionName ) && \substr( \strtolower( $document->VersionName ), 0, 8 ) === 'original' ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$document->VersionName` is defined by the SaaS API.
 				$original_fallbacks[] = $document;
 			}
 
