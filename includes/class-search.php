@@ -425,21 +425,23 @@ class Search {
 			esc_html__( 'No date set', 'imageshop-dam-connector' )
 		);
 
-		if ( ! empty( $media->PublishedUntil ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->PublishedUntil` is provided by the SaaS API.
-			$fields[] = sprintf(
-				'<div class="imageshpo-publish-until"><strong>%s</strong> %s</div>',
-				esc_html__( 'Publish until:', 'imageshop-dam-connector' ),
-				esc_html( date_i18n( get_option( 'date_format' ), strtotime( $media->PublishedUntil ) ) ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->PublishedUntil` is provided by the SaaS API.
-			);
-		}
+		$fields[] = sprintf(
+			'<div class="imageshpo-publish-until"><strong>%s</strong> %s</div>',
+			esc_html__( 'Publish until:', 'imageshop-dam-connector' ),
+			( ! empty( $media->PublishedUntil ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->PublishedUntil` is provided by the SaaS API.
+				? esc_html( date_i18n( get_option( 'date_format' ), strtotime( $media->PublishedUntil ) ) ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->PublishedUntil` is provided by the SaaS API.
+				: $no_date_placeholder
+			)
+		);
 
-		if ( ! empty( $media->RightsExpiration ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->RightsExpiration` is provided by the SaaS API.
-			$fields[] = sprintf(
-				'<div class="imageshpo-right-expires"><strong>%s</strong> %s</div>',
-				esc_html__( 'Right expires:', 'imageshop-dam-connector' ),
-				esc_html( date_i18n( get_option( 'date_format' ), strtotime( $media->RightsExpiration ) ) ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->RightsExpiration` is provided by the SaaS API.
-			);
-		}
+		$fields[] = sprintf(
+			'<div class="imageshpo-right-expires"><strong>%s</strong> %s</div>',
+			esc_html__( 'Right expires:', 'imageshop-dam-connector' ),
+			( ! empty( $media->RightsExpiration ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->RightsExpiration` is provided by the SaaS API.
+				? esc_html( date_i18n( get_option( 'date_format' ), strtotime( $media->RightsExpiration ) ) ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->RightsExpiration` is provided by the SaaS API.
+				: $no_date_placeholder
+			)
+		);
 
 		$fields[] = sprintf(
 			'<div class="imageshpo-document-code"><strong>%s</strong> %s</div>',
