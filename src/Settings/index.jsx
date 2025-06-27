@@ -57,6 +57,7 @@ export default function Settings() {
 					default_interface: settings.default_interface,
 					disable_srcset: settings.disable_srcset,
 					webp_support: settings.webp_support,
+					upload_to_imageshop: settings.upload_to_imageshop,
 				}
 			}
 		).then( ( response ) => {

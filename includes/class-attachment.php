@@ -608,6 +608,12 @@ class Attachment {
 	 * @return false|mixed
 	 */
 	public function export_to_imageshop( $post_id, $force = false ) {
+		// If automated uploading of documents to Imageshop is disabled, bail early.
+		$upload_to_imageshop = \get_option( 'imageshop_upload_to_imageshop', 'yes' );
+		if ( 'yes' !== $upload_to_imageshop && 'force' !== $force ) {
+			return $post_id;
+		}
+
 		if ( true === \wp_attachment_is_image( $post_id )
 			&& ( ! \boolval( \get_post_meta( $post_id, '_imageshop_document_id', true ) ) || true === $force ) ) {
 			$rest_controller = REST_Controller::get_instance();

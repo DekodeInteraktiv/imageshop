@@ -11,6 +11,10 @@ export default function Advanced( { settings, updateSettings } ) {
 		updateSettings( { webp_support: newState ? 'yes' : 'no' } )
 	}
 
+	const updateImageshopUploadPreference = ( newState ) => {
+		updateSettings( { upload_to_imageshop: newState ? 'yes' : 'no' } );
+	}
+
 	return (
 		<div>
 			<Sections>
@@ -64,6 +68,37 @@ export default function Advanced( { settings, updateSettings } ) {
 							</span>
 						</label>
 					</div>
+				</Section>
+
+				<Section>
+					<SectionHeader>
+						<SectionTitle>
+							{ __( 'Upload images to Imageshop', 'imageshop-dam-connector' ) }
+						</SectionTitle>
+						<SectionDescription>
+							{ __( 'Choose if you would like any new images you upload in WordPress to also be uploaded and served by Imageshop.', 'imageshop-dam-connector' ) }
+						</SectionDescription>
+						<SectionDescription>
+							{ __( 'Some organizations may prefer to keep their Imageshop DAM interfaces clear of any assets intended purely for website use, this setting allows them to disable the automated Imageshop uploads to achieve this.', 'imageshop-dam-connector' ) }
+						</SectionDescription>
+
+						<SectionDescription className="italic">
+							{ __( 'This setting does not affect existing images, and is enabled by default.', 'imageshop-dam-connector' ) }
+						</SectionDescription>
+
+						<div>
+							<label className="inline-block py-2">
+								<input
+									type="checkbox"
+									checked={ settings.upload_to_imageshop === 'yes' }
+									onChange={ ( event ) => updateImageshopUploadPreference( event.target.checked ) }
+								/>
+								<span>
+								{ __( 'Upload a copy of all images to Imageshop', 'imageshop-dam-connector' ) }
+							</span>
+							</label>
+						</div>
+					</SectionHeader>
 				</Section>
 			</Sections>
 		</div>

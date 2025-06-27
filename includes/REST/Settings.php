@@ -37,10 +37,11 @@ class Settings {
 	private function get_settings_api_response() {
 		$imageshop = REST_Controller::get_instance();
 
-		$api_key           = \get_option( 'imageshop_api_key', '' );
-		$default_interface = \get_option( 'imageshop_upload_interface', '' );
-		$disable_srcset    = \get_option( 'imageshop_disable_srcset', 'no' );
-		$webp_support      = \get_option( 'imageshop_webp_support', 'no' );
+		$api_key             = \get_option( 'imageshop_api_key', '' );
+		$default_interface   = \get_option( 'imageshop_upload_interface', '' );
+		$disable_srcset      = \get_option( 'imageshop_disable_srcset', 'no' );
+		$webp_support        = \get_option( 'imageshop_webp_support', 'no' );
+		$upload_to_imageshop = \get_option( 'imageshop_upload_to_imageshop', 'yes' );
 
 		$valid_api = ! empty( $api_key ) && $imageshop->test_valid_token();
 
@@ -50,13 +51,14 @@ class Settings {
 		}
 
 		return [
-			'api_key'           => $api_key,
-			'original_api_key'  => $api_key,
-			'default_interface' => $default_interface,
-			'disable_srcset'    => $disable_srcset,
-			'webp_support'      => $webp_support,
-			'has_valid_api_key' => $valid_api,
-			'interfaces'        => $interfaces,
+			'api_key'             => $api_key,
+			'original_api_key'    => $api_key,
+			'default_interface'   => $default_interface,
+			'disable_srcset'      => $disable_srcset,
+			'webp_support'        => $webp_support,
+			'upload_to_imageshop' => $upload_to_imageshop,
+			'has_valid_api_key'   => $valid_api,
+			'interfaces'          => $interfaces,
 		];
 	}
 
@@ -65,10 +67,11 @@ class Settings {
 	}
 
 	public function update_settings( WP_REST_Request $request ) {
-		$api_key           = $request->get_param( 'api_key' );
-		$default_interface = $request->get_param( 'default_interface' );
-		$disable_srcset    = $request->get_param( 'disable_srcset' );
-		$webp_support      = $request->get_param( 'webp_support' );
+		$api_key             = $request->get_param( 'api_key' );
+		$default_interface   = $request->get_param( 'default_interface' );
+		$disable_srcset      = $request->get_param( 'disable_srcset' );
+		$webp_support        = $request->get_param( 'webp_support' );
+		$upload_to_imageshop = $request->get_param( 'upload_to_imageshop' );
 
 		if ( ! empty( $api_key ) ) {
 			\update_option( 'imageshop_api_key', $api_key );
@@ -84,6 +87,10 @@ class Settings {
 
 		if ( ! is_null( $webp_support ) ) {
 			\update_option( 'imageshop_webp_support', $webp_support );
+		}
+
+		if ( ! is_null( $upload_to_imageshop ) ) {
+			\update_option( 'imageshop_upload_to_imageshop', $upload_to_imageshop );
 		}
 
 		return new WP_REST_Response( [
