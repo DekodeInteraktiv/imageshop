@@ -8,4 +8,7 @@
 # Allow local environment overrides.
 .wp-env.override.json
 
+latest_changelog.md
+
 imageshop.zip
+imageshop-dam-connector.zip

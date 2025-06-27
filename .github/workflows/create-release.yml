@@ -28,9 +28,8 @@ jobs:
             - name: Get changelog entries
               id: changelog
               run: |
-                  changelog=$("awk 'BEGIN{IGNORECASE=1;c=0;f=0;v=0}/^== Changelog ==/{c=1;next}c&&/^== /&&!/^== Changelog ==/{exit}c{if(/^= .* \([0-9]{4}-[0-9]{2}-[0-9]{2}\) =$/){v++;if(v==1){f=1;print;next}else{exit}}if(f)print}' readme.txt")
-                  echo $changelog
-                  echo "changes=$changelog" >> $GITHUB_OUTPUT
+                  chmod +x ./.github/extract_latest_changelog.sh
+                  ./.github/extract_latest_changelog.sh readme.txt changelog.md
 
             - name: Build dependencies
               run: npm run build
@@ -54,7 +53,7 @@ jobs:
                   tag_name: ${{ inputs.version }}
                   release_name: Release ${{ inputs.version }}
                   draft: false
-                  body: ${{ steps.changelog.outputs.changes }}
+                  body_path: ./changelog.md
                   prerelease: false
 
             - name: Attach plugin zip to release
