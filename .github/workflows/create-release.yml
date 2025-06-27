@@ -53,7 +53,7 @@ jobs:
                   tag_name: ${{ inputs.version }}
                   release_name: Release ${{ inputs.version }}
                   draft: false
-                  body_path: ./changelog.md
+                  body_path: ./latest_changelog.md
                   prerelease: false
 
             - name: Attach plugin zip to release
