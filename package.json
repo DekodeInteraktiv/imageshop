@@ -1,5 +1,5 @@
 {
-	"name": "imageshop",
+	"name": "imageshop-dam-connector",
 	"version": "1.0.0",
 	"devDependencies": {
 		"@heroicons/react": "^2.2.0",
