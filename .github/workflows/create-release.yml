@@ -29,7 +29,7 @@ jobs:
               id: changelog
               run: |
                   chmod +x ./.github/extract_latest_changelog.sh
-                  ./.github/extract_latest_changelog.sh readme.txt changelog.md
+                  ./.github/extract_latest_changelog.sh readme.txt
 
             - name: Build dependencies
               run: npm run build
