@@ -29,6 +29,8 @@ class REST_Controller {
 	private const IMAGESHOP_API_GET_PERMALINK_URL      = '/Permalink/CreatePermaLinks';
 	private const IMAGESHOP_API_SET_METADATA           = '/Document/SetMetadata';
 
+	private const IMAGESHOP_API_GET_DOCUMENT_CONSENTS  = '/Document/GetConsents';
+
 	/**
 	 * @var REST_Controller
 	 */
@@ -794,5 +796,26 @@ class REST_Controller {
 		);
 
 		return $this->execute_request( self::IMAGESHOP_API_BASE_URL . self::IMAGESHOP_API_SET_METADATA, $args );
+	}
+
+	public function get_document_consents( $payload ) {
+		$payload = array_merge(
+			array(
+				'interfaceId' => 0,
+			),
+			$payload
+		);
+
+		$url = \add_query_arg(
+			$payload,
+			self::IMAGESHOP_API_BASE_URL . self::IMAGESHOP_API_GET_DOCUMENT_CONSENTS
+		);
+
+		$args = array(
+			'method'  => 'GET',
+			'headers' => $this->get_headers(),
+		);
+
+		return $this->execute_request( $url, $args );
 	}
 }

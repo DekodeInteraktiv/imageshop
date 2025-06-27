@@ -25,6 +25,8 @@ class Search {
 		'CategoryIds'   => null,
 	);
 
+	private array $consent = array();
+
 	/**
 	 * Class constructor.
 	 */
@@ -154,6 +156,8 @@ class Search {
 		\header( 'X-WP-Total: ' . (int) $search_results->NumberOfDocuments ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$search_Results->NumberOfDocuments` is provided by the SaaS API.
 		\header( 'X-WP-TotalPages: ' . (int) ceil( ( $search_results->NumberOfDocuments / $this->search_attributes['Pagesize'] ) ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$search_results->NumberOfDocuments` and `$search_attributes['Pagesize']` are provided by the SaaS API.
 
+		$this->prepare_media_consent( $search_results->DocumentList ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$search_results->DocumentList` is provided by the SaaS API.
+
 		foreach ( $search_results->DocumentList as $result ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$search_results->DocumentList` is provided by the SaaS API.
 			$this->attachment->append_document( $result->DocumentID, $result ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$result->DocumentID` is provided by the SaaS API.
 			$media[] = $this->imageshop_pseudo_post( $result, ( isset( $this->search_attributes['InterfaceIds'] ) ? $this->search_attributes['InterfaceIds'][0] : null ) );
@@ -162,6 +166,44 @@ class Search {
 		\wp_send_json_success( $media );
 
 		\wp_die();
+	}
+
+	public function prepare_media_consent( $media ) {
+		$media_ids = array();
+		foreach ( $media as $item ) {
+			$media_ids[] = $item->DocumentID; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$item->DocumentID` is provided by the SaaS API.
+		}
+
+		// Order the `$media_ids` array to be in ascending order.
+		sort( $media_ids );
+
+		$unordered_consent_notes = \get_transient( 'imageshop_consent_notes_' . \md5( \wp_json_encode( $media_ids ) ) );
+		if ( false === $unordered_consent_notes ) {
+			$consent_payload = array(
+				'interfaceId' => ( isset( $this->search_attributes['InterfaceIds'] ) ? $this->search_attributes['InterfaceIds'][0] : 0 ),
+				'documentIds' => implode( ',', $media_ids ),
+				'language'    => $this->imageshop->get_language(),
+			);
+
+			$unordered_consent_notes = $this->imageshop->get_document_consents( $consent_payload );
+
+			\set_transient(
+				'imageshop_consent_notes_' . \md5( \wp_json_encode( $media_ids ) ),
+				$unordered_consent_notes,
+				15 * MINUTE_IN_SECONDS
+			);
+		}
+
+		error_log( var_export( $unordered_consent_notes, true ) );
+
+		foreach ( $unordered_consent_notes as $consent_note ) {
+			if ( ! isset( $consent_note->DocumentId ) ) {
+				continue;
+			}
+
+			$this->consent[ $consent_note->DocumentId ] = $consent_note; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$consent_note->DocumentId` is provided by the SaaS API.
+		}
+		unset( $unordered_consent_notes );
 	}
 
 	/**
@@ -424,6 +466,10 @@ class Search {
 			'<em>%s</em>',
 			esc_html__( 'No date set', 'imageshop-dam-connector' )
 		);
+		$no_consent_placeholder = sprintf(
+			'<em>%s</em>',
+			esc_html__( 'No consent details available', 'imageshop-dam-connector' )
+		);
 
 		$fields[] = sprintf(
 			'<div class="imageshpo-publish-until"><strong>%s</strong> %s</div>',
@@ -440,6 +486,15 @@ class Search {
 			( ! empty( $media->RightsExpiration ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->RightsExpiration` is provided by the SaaS API.
 				? esc_html( date_i18n( get_option( 'date_format' ), strtotime( $media->RightsExpiration ) ) ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->RightsExpiration` is provided by the SaaS API.
 				: $no_date_placeholder
+			)
+		);
+
+		$fields[] = sprintf(
+			'<div class="imageshop-consent"><strong>%s</strong> %s</div>',
+			esc_html__( 'Consent:', 'imageshop-dam-connector' ),
+			( isset( $this->consent[ $media->DocumentID ] ) && ! empty( $this->consent[ $media->DocumentID ]->Description ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` and `$this->consent[ $media->DocumentID ]->ConsentNote` are provided by the SaaS API.
+				? esc_html( $this->consent[ $media->DocumentID ]->Description . ' ' . $this->consent[ $media->DocumentID ]->AdditionalInfo ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$this->consent[ $media->DocumentID ]->ConsentNote` is provided by the SaaS API.
+				: $no_consent_placeholder
 			)
 		);
 
