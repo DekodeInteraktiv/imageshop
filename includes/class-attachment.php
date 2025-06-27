@@ -156,9 +156,16 @@ class Attachment {
 				}
 			}
 
+			$alt_text = '';
+			if ( isset( $media->AltText ) && ! empty( $media->AltText ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->AltText` is provided by the SaaS API.
+				$alt_text = $media->AltText; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->AltText` is provided by the SaaS API.
+			} elseif ( isset( $media->Description ) && ! empty( $media->Description ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->Description` is provided by the SaaS API.
+				$alt_text = $media->Description; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->Description` is provided by the SaaS API.
+			}
+
 			return array(
 				'title'       => $media->Name, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->Name` is provided by the SaaS API.
-				'alt'         => $media->Description, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->Description` is provided by the SaaS API.
+				'alt'         => $alt_text,
 				'caption'     => $caption,
 				'description' => $media->Description, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->Description` is provided by the SaaS API.
 			);
