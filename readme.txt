@@ -3,7 +3,7 @@ Tags: media library, media cdn, DAM
 Requires at least: 6.2
 Requires PHP: 5.6
 Tested up to: 6.8
-Stable tag: 1.1.2
+Stable tag: 1.2.0
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,7 +30,23 @@ If you at any point wish to stop using Imageshop for your files, you can export 
 
 We welcome both suggestions, discussions, and code! Check out the project source at https://github.com/DekodeInteraktiv/imageshop
 
+== Screenshots ==
+
+1. The default WordPress media library, extended with Imageshop and showing results form your image bank.
+2. Detailed information about one of your images, including rightss expiry, consent status, and more.
+3. A view of the Imageshop advanced settings page.
+
 == Changelog ==
+
+= 1.2.0 (2025-06-27) =
+* Feature: Pretty permalinks for Imageshop media items. Your media will now have a reader-friendly name in the URL.
+* Feature: WebP Support. The plugin will now automatically serve up WebP images if you've enabled it, head on over to the settings page to enable it.
+* Feature: Disable uploads to Imageshop. If you ever wanted to keep your WordPress media separate, you can now disable the automatic uploads to Imageshop, and only use the plugin to quickly access and insert media from Imageshop.
+* Feature: Consent documentation. The plugin will now show if consent is given by individuals in an image, and what platforms they've given consent for their likeness to be used on.
+* Enhancement: Rights and expiration date fields will now always be visible, even if no information is available, to give a more consistent user interface.
+* Enhancement: Visual overhaul of the Imageshop settings page and onboarding experience.
+* Bugfix: Fixed an issue where images with unexpected data values would prevent further browsing through paginated content.
+* Bugfix: Fixed a case where the visual alt-text for an image would show the description text when updating Imageshop details, and then revert to its intended value when refreshing the page.
 
 = 1.1.2 (2025-04-04) =
 * Media filter: Ensure filters are always rendered after the error fixes in 1.1.1
@@ -44,30 +60,3 @@ We welcome both suggestions, discussions, and code! Check out the project source
 * Attachments: Import the new `AltText` attribute from the Imageshop API.
 * Translations: Updated when translations are loaded, to follow the best practice since WordPress 6.7
 * General: Updated tested with attributes.
-
-= 1.1.0 (2024-02-22) =
-* Search: Ignore image mime-types when the image is served by Imageshop, these are always valid and checked by the Imageshop API.
-* Attachments: Improve the SQL query for fallback handling to be more performant in the database lookups it performs.
-* Attachments: Avoid duplicating the srcset generation if it already exists.
-* Attachments: Introduce a new advanced setting allowing site administrators to disable the srcset calculations on media-heavy sites that may not always be compatible with WordPress' media handling.
-
-= 1.0.4 (2023-09-05) =
-* Attachments: Fix a race condition where a 0x0 pixel image size could be generated if the image was being processsed by third party code during the upload process.
-
-= 1.0.3 (2023-08-14) =
-* Attachments: Improve the identification of original images to generate the appropriate media sizes.
-
-= 1.0.2 (2023-07-20) =
-* Imageshpo API: Add secondary declaration for media interfaces to improve support during uthe upload procedure.
-
-= 1.0.1 (2023-07-19) =
-* Attachments: Fall back to local images if the Imageshop API response fails for any reason.
-* Attachments: Add support for image sizes defined in an array, and not by a pre-registered slug.
-
-= 1.0.0 (2023-06-20) =
-* Media filter: Use numeration for categories to avoid filter reordering on CategoryID's.
-* Media library: Add a note about image sizes.
-* Attachments: Fix an issue where 0x0 pixel image sizes would be needlessly generated.
-* Attachments: Avoid repetative fallback actions when the domain for an attachment does not match the site URL.
-* Attachments: Add dynamic generation of media captions.
-* Attachments: Ensure mime-types match image media before attempting to generate image variations.
