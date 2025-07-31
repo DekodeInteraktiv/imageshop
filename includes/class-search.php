@@ -194,8 +194,6 @@ class Search {
 			);
 		}
 
-		error_log( var_export( $unordered_consent_notes, true ) );
-
 		foreach ( $unordered_consent_notes as $consent_note ) {
 			if ( ! isset( $consent_note->DocumentId ) ) {
 				continue;
