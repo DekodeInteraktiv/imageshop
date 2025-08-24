@@ -1300,7 +1300,7 @@ class Attachment {
 		);
 
 		if ( is_array( $attachment ) ) {
-			$attachment = $attachment[0];
+			$attachment = reset( $attachment );
 		}
 
 		return trim(

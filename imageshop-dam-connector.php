@@ -53,6 +53,8 @@ namespace Imageshop\WordPress;
 	}
 } );
 
+require_once __DIR__ . '/includes/compatibility.php';
+
 require_once __DIR__ . '/includes/class-imageshop.php';
 require_once __DIR__ . '/includes/class-attachment.php';
 require_once __DIR__ . '/includes/class-helpers.php';
