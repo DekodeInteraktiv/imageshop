@@ -1,7 +1,7 @@
 === Imageshop DAM Connector ===
 Tags: media library, media cdn, DAM
 Requires at least: 6.2
-Requires PHP: 5.6
+Requires PHP: 7.0
 Tested up to: 6.8
 Stable tag: 1.2.0
 License: GPLv2
