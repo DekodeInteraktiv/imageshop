@@ -985,6 +985,7 @@ class Attachment {
 		if ( ! isset( $media_details['size']['original'] ) ) {
 			$url = $this->preloaded_url(
 				$media->DocumentID, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` is defined by the SaaS API.
+				$original_image,
 				$original_image->Width, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is defined by the SaaS API.
 				$original_image->Height // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is defined by the SaaS API.
 			);
@@ -1193,9 +1194,9 @@ class Attachment {
 		return $caption;
 	}
 
-	public function get_permalink_for_size( $document_id, $filename, $width, $height, $crop = false ) {
+	public function get_permalink_for_size( $document_id, $filename, $width, $height, $crop = false, $is_not_image_media = false ) {
 		// If dimensions are both 0, this image would never be visible, so skip the size.
-		if ( 0 === (int) $height && 0 === (int) $width ) {
+		if ( 0 === (int) $height && 0 === (int) $width && ! $is_not_image_media ) {
 			return null;
 		}
 
@@ -1216,7 +1217,7 @@ class Attachment {
 			return null;
 		}
 
-		if ( $original_image && ( 0 === $original_image->Width || 0 === $original_image->Height ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are provided by the SaaS API.
+		if ( $original_image && ( 0 === $original_image->Width || 0 === $original_image->Height ) && ! $is_not_image_media ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are provided by the SaaS API.
 			$dimensions = $this->get_original_dimensions( $media->InterfaceList, $original_image ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->InterfaceList` is provided by the SaaS API.
 
 			$original_image->Width  = $dimensions['width']; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is provided by the SaaS API.
@@ -1224,10 +1225,10 @@ class Attachment {
 		}
 
 		// No sizes should ever exceed the original image sizes, make it so.
-		if ( $width > $original_image->Width ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is defined by the SaaS API.
+		if ( $width > $original_image->Width && ! $is_not_image_media ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is defined by the SaaS API.
 			$width = $original_image->Width; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is defined by the SaaS API.
 		}
-		if ( $height > $original_image->Height ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is defined by the SaaS API.
+		if ( $height > $original_image->Height && ! $is_not_image_media ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is defined by the SaaS API.
 			$height = $original_image->Height; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is defined by the SaaS API.
 		}
 
@@ -1240,18 +1241,18 @@ class Attachment {
 		 * This check will catch such a scenario, and return a `null` value, as if an original is missing,
 		 * this is done so as not to break any behavior elsewhere, but this is bad mojo all around.
 		 */
-		if ( 0 === $width && 0 === $height ) {
+		if ( 0 === $width && 0 === $height && ! $is_not_image_media ) {
 			return null;
 		}
 
-		if ( 0 === $width || 0 === $height ) {
+		if ( ( 0 === $width || 0 === $height ) && ! $is_not_image_media ) {
 			if ( 0 === $width ) {
 				$width = (int) \floor( ( $height / $original_image->Height ) * $original_image->Width ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are defined by the SaaS API.
 			}
 			if ( 0 === $height ) {
 				$height = (int) \floor( ( $width / $original_image->Width ) * $original_image->Height ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are defined by the SaaS API.
 			}
-		} elseif ( $original_image->Width > $width || $original_image->Height > $height ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are defined by the SaaS API.
+		} elseif ( ( $original_image->Width > $width || $original_image->Height > $height ) && ! $is_not_image_media ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are defined by the SaaS API.
 			// Calculate the aspect ratios for use in getting the appropriate dimension height/width wise for this image.
 			$original_ratio = ( $original_image->Width / $original_image->Height ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are defined by the SaaS API.
 			$image_ratio    = ( $width / $height );
@@ -1271,6 +1272,7 @@ class Attachment {
 
 		$url = $this->preloaded_url(
 			$media,
+			$original_image,
 			$width,
 			$height
 		);
@@ -1285,7 +1287,7 @@ class Attachment {
 		);
 	}
 
-	public function preloaded_url( $media, $width, $height ) {
+	public function preloaded_url( $media, $original_image, $width, $height ) {
 		$imageshop = REST_Controller::get_instance();
 		$media_id  = ( is_object( $media ) ? $media->DocumentID : $media ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` is defined by the SaaS API.
 
@@ -1303,11 +1305,19 @@ class Attachment {
 			$attachment = reset( $attachment );
 		}
 
+		$file_type = \wp_check_filetype( ( is_object( $media ) && ! empty( $media->Filename ) ? $media->Filename : $attachment->post_title ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FileName` is provided by the SaaS API.
+
+		if ( ! empty( $file_type['type'] ) && is_string( $file_type['type'] ) && stristr( $file_type['type'], 'image/' ) !== false ) {
+			$url_base = \untrailingslashit( $imageshop->create_permalinks_url( $media_id, $width, $height, $this->get_attachment_permalink_token_base( $attachment->ID ) ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` is defined by the SaaS API.
+		} else {
+			$url_base = \untrailingslashit( $imageshop->create_subdocument_permalinks_url( $media_id, $original_image->SubDocumentID, $this->get_attachment_permalink_token_base( $attachment->ID ) ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` is defined by the SaaS API.
+		}
+
 		return trim(
 			sprintf(
 				'%s/%s',
-				\untrailingslashit( $imageshop->create_permalinks_url( $media_id, $width, $height, $this->get_attachment_permalink_token_base( $attachment->ID ) ) ), // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` is defined by the SaaS API.
-				urlencode( $this->get_attachment_filename( $attachment->ID, $media->Filename ) ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FileName` is provided by the SaaS API.
+				$url_base,
+				urlencode( $this->get_attachment_filename( $attachment->ID, ( is_object( $media ) && ! empty( $media->Filename ) ? $media->Filename : $attachment->post_title ) ) ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FileName` is provided by the SaaS API.
 			)
 		);
 	}
@@ -1318,21 +1328,26 @@ class Attachment {
 			$filename = basename( $filename );
 		}
 
+		$file_type = \wp_check_filetype( $filename );
+
 		// Strip the file extension (if it exists) from the filename, so that we can sanitize the name.
 		$filename = \pathinfo( $filename, PATHINFO_FILENAME );
+		$file_ext = \pathinfo( $filename, PATHINFO_EXTENSION );
 
 		// We sanitize the remaining filename to remove characters which some browsers or locales may not support properly.
 		$filename = \sanitize_title( $filename );
 
-		// Append a file extension for the file, this is always `.jpg` (unless webp support is enabled).
-		$use_webp = \get_option( 'imageshop_webp_support', 'no' );
-		if ( 'yes' === $use_webp ) {
-			$filename .= '.webp';
-		} else {
-			$filename .= '.jpg';
+		if ( ! empty( $file_type['type'] ) && is_string( $file_type['type'] ) && stristr( $file_type['type'], 'image/' ) !== false ) {
+			// Append a file extension for the file, this is always `.jpg` (unless webp support is enabled).
+			$use_webp = \get_option( 'imageshop_webp_support', 'no' );
+			if ( 'yes' === $use_webp ) {
+				$file_ext .= '.webp';
+			} else {
+				$file_ext .= '.jpg';
+			}
 		}
 
-		return $filename;
+		return $filename . $file_ext;
 	}
 
 	/**

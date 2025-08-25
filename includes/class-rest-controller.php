@@ -397,6 +397,23 @@ class REST_Controller {
 		$this->execute_request( self::IMAGESHOP_API_BASE_URL . self::IMAGESHOP_API_GET_PERMALINK_URL, $args );
 	}
 
+	public function create_subdocument_permalinks_url( $document_id, $subdocument_id, $permalink_token ) {
+		$generated_uuid = $permalink_token;
+
+		$this->queued_permalinks[] = array(
+			'documentid'      => $document_id,
+			'subdocumentid'   => $subdocument_id,
+			'optionalurlhint' => \site_url( '/' ),
+			'permalinktoken'  => $generated_uuid,
+		);
+
+		return sprintf(
+			'%s/%s',
+			\untrailingslashit( self::IMAGESHOP_CDN_PREFIX ),
+			$generated_uuid
+		);
+	}
+
 	/**
 	 * Generate the link that will hold our image ahead of time.
 	 *

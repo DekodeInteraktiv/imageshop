@@ -125,15 +125,20 @@ class Search {
 		}
 
 		// Do not process queries for documents or videos, which are not (yet) handled by Imageshop.
-		if ( isset( $_POST['query']['post_mime_type'] ) ) {
-			if (
-				( is_array( $_POST['query']['post_mime_type'] ) && ! in_array( 'image', $_POST['query']['post_mime_type'], true ) ) ||
-				( is_string( $_POST['query']['post_mime_type'] ) && 'image' !== strtolower( $_POST['query']['post_mime_type'] ) )
-			) {
-				\add_action( 'pre_get_posts', array( $this, 'skip_imageshop_items' ) );
+		$mime_types = ( isset( $_POST['query']['post_mime_type'] ) ? $_POST['query']['post_mime_type'] : [] );
+		if ( ! is_array( $mime_types ) ) {
+			$mime_types = (array) $mime_types;
+		}
 
-				return;
-			}
+		switch ( true ) {
+			case ( in_array( 'image', $mime_types ) ):
+				$mime_type = array( 'IMAGE' );
+				break;
+			case ( in_array( 'video', $mime_types ) ):
+				$mime_type = array( 'VIDEO' );
+				break;
+			default:
+				$mime_type = array( 'ALL' );
 		}
 
 		$this->search_attributes = array(
@@ -143,6 +148,7 @@ class Search {
 			'Page'          => null,
 			'InterfaceIds'  => null,
 			'CategoryIds'   => null,
+			'DocumentType'  => $mime_type,
 		);
 
 		if ( isset( $_POST['query']['imageshop_language'] ) && ! empty( $_POST['query']['imageshop_language'] ) ) {
@@ -222,6 +228,20 @@ class Search {
 
 		foreach ( $fields as $field => $default_value ) {
 			switch ( $field ) {
+				case 'DocumentType':
+					if ( ! is_array( $default_value ) ) {
+						$default_value = array( $default_value );
+					}
+					$allowed_values = array( 'ALL', 'IMAGE', 'VIDEO', 'AUDIO', 'DOCUMENT', 'OTHER' );
+
+					$attributes[ $field ] = array();
+
+					foreach ( $default_value as $value ) {
+						if ( in_array( $value, $allowed_values, true ) ) {
+							$attributes[ $field ][] = $value;
+						}
+					}
+					break;
 				case 'Querystring':
 					if ( isset( $post_request['s'] ) ) {
 						$attributes[ $field ] = \htmlspecialchars( $post_request['s'] );
@@ -391,6 +411,21 @@ class Search {
 						'width'       => $original_media->Width, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Width` is provided by the SaaS API.
 						'height'      => $original_media->Height, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Height` is provided by the SaaS API.
 						'orientation' => ( $original_media->Height > $original_media->Width ? 'portrait' : 'landscape' ), // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Height` and `$original_media->Width` are provided by the SaaS API.
+					),
+				);
+			}
+		} elseif ( $media_file_type && ! \stristr( $media_file_type, 'image' ) ) {
+			$full_size_url = $this->attachment->get_permalink_for_size( $media->DocumentID, $media->FileName, 0, 0, false , true ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID`, `$media->FileName`, `$original_media->Width`, and `$oreiginal_media->Height` are provided by the SaaS API.
+
+			if ( null !== $full_size_url ) {
+				$full_size_url = $full_size_url['source_url'];
+
+				$image_sizes = array(
+					'full' => array(
+						'url'         => $full_size_url,
+						'width'       => 0, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Width` is provided by the SaaS API.
+						'height'      => 0, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Height` is provided by the SaaS API.
+						'orientation' => 'landscape',
 					),
 				);
 			}
