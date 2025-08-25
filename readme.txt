@@ -3,7 +3,7 @@ Tags: media library, media cdn, DAM
 Requires at least: 6.2
 Requires PHP: 7.0
 Tested up to: 6.8
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -38,6 +38,12 @@ We welcome both suggestions, discussions, and code! Check out the project source
 
 == Changelog ==
 
+= 1.3.0 (2025-08-26) =
+* Feature: Support generic files (such as PDF's or Office documents) in the media manager.
+* Feature: Support for video embeds from Imageshop.
+* Enhancement: Added a compatibility layer to support synchronised attributes between WooCommerce products when using Polylang.
+* Maintenance: Changed the minimum required WordPress and PHP version to 6.2 and 7.0 respectively.
+
 = 1.2.0 (2025-06-27) =
 * Feature: Pretty permalinks for Imageshop media items. Your media will now have a reader-friendly name in the URL.
 * Feature: WebP Support. The plugin will now automatically serve up WebP images if you've enabled it, head on over to the settings page to enable it.
@@ -47,16 +53,3 @@ We welcome both suggestions, discussions, and code! Check out the project source
 * Enhancement: Visual overhaul of the Imageshop settings page and onboarding experience.
 * Bugfix: Fixed an issue where images with unexpected data values would prevent further browsing through paginated content.
 * Bugfix: Fixed a case where the visual alt-text for an image would show the description text when updating Imageshop details, and then revert to its intended value when refreshing the page.
-
-= 1.1.2 (2025-04-04) =
-* Media filter: Ensure filters are always rendered after the error fixes in 1.1.1
-* Settings: Fixed error preventing feedback messages from rendering.
-* Onboarding: Removed import options form the onboarding wizard, the feature exists within the settings page, but removes potential confusion during setup.
-* Compatibility: Properly flush caches when the plugin is uninstalled.
-* Compatibility: Ensure the plugin is compatible with WordPress 6.8.
-
-= 1.1.1 (2025-02-21) =
-* Media filer: Fix a fatal error when the available interfaces list is empty.
-* Attachments: Import the new `AltText` attribute from the Imageshop API.
-* Translations: Updated when translations are loaded, to follow the best practice since WordPress 6.7
-* General: Updated tested with attributes.
