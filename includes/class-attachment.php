@@ -1103,7 +1103,7 @@ class Attachment {
 		$key_url = $image_sizes[ $size_key ]['source_url' ] ?? '';
 		$key_url_parts = explode( '/', $key_url );
 		$filename_section = end( $key_url_parts );
-		if ( empty( $filename_section ) || substr_count( $filename_section, '.' ) >= 1 ) {
+		if ( empty( $filename_section ) || substr_count( $filename_section, '.' ) != 1 ) {
 			$filename = $this->get_attachment_filename( $attachment->ID, $filename );
 
 			// We remove the final entry from the array, as this is the filename, or an empty segment.
@@ -1345,6 +1345,10 @@ class Attachment {
 			} else {
 				$file_ext .= '.jpg';
 			}
+		}
+
+		if ( empty( $file_ext ) && ! empty( $file_type['ext'] ) ) {
+			$file_ext = '.' . $file_type['ext'];
 		}
 
 		return $filename . $file_ext;
