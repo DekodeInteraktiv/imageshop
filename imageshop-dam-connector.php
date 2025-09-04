@@ -3,7 +3,7 @@
  * Plugin Name: Imageshop DAM Connector
  * Plugin URI:
  * Description: Use the Imageshop media library as your companys one source for all media.
- * Version: 1.3.0
+ * Version: 1.3.1
  * Author: Imageshop
  * Author URI: https://imageshop.org
  * License: GPLv2
@@ -20,6 +20,8 @@ namespace Imageshop\WordPress;
 if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
+
+use Imageshop\WordPress\Upgrade;
 
 \define( 'IMAGESHOP_ABSPATH', __DIR__ );
 \define( 'IMAGESHOP_PLUGIN_BASE_NAME', __FILE__ );
@@ -57,6 +59,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 	require_once __DIR__ . '/vendor/autoload.php';
 }
+
+require_once __DIR__ . '/includes/upgrade.php';
 
 require_once __DIR__ . '/includes/helpers.php';
 require_once __DIR__ . '/includes/compatibility.php';
@@ -98,6 +102,8 @@ if ( \class_exists( 'WP_CLI' ) ) {
 	require_once __DIR__ . '/includes/CLI/class-media.php';
 	require_once __DIR__ . '/includes/CLI/class-duplicates.php';
 }
+
+new Upgrade();
 
 $isml = Imageshop::get_instance();
 $isml->start();
