@@ -1100,7 +1100,7 @@ class Attachment {
 
 		// If the last section is a filename, or there is no filename, we strip this off, and run the filename converter.
 		// By doing this in both cases means we can have future file formats supported on cached entries as well.
-		$key_url = $image_sizes[ $size_key ]['source_url' ];
+		$key_url = $image_sizes[ $size_key ]['source_url' ] ?? '';
 		$key_url_parts = explode( '/', $key_url );
 		$filename_section = end( $key_url_parts );
 		if ( empty( $filename_section ) || substr_count( $filename_section, '.' ) >= 1 ) {
