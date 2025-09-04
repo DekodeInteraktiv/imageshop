@@ -137,8 +137,11 @@ class Search {
 			case ( in_array( 'video', $mime_types ) ):
 				$mime_type = array( 'VIDEO' );
 				break;
+			case ( in_array( 'audio', $mime_types ) ):
+				$mime_type = array( 'AUDIO' );
+				break;
 			default:
-				$mime_type = array( 'ALL' );
+				$mime_type = array( 'IMAGE', 'VIDEO', 'AUDIO', 'DOCUMENT' );
 		}
 
 		$this->search_attributes = array(
