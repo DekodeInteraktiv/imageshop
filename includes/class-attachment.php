@@ -1305,7 +1305,7 @@ class Attachment {
 			$attachment = reset( $attachment );
 		}
 
-		$file_type = \wp_check_filetype( ( is_object( $media ) && ! empty( $media->Filename ) ? $media->Filename : $attachment->post_title ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FileName` is provided by the SaaS API.
+		$file_type = \wp_check_filetype( ( is_object( $media ) && ! empty( $media->FileName ) ? $media->FileName : $attachment->post_title ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FileName` is provided by the SaaS API.
 
 		if ( ! empty( $file_type['type'] ) && is_string( $file_type['type'] ) && stristr( $file_type['type'], 'image/' ) !== false ) {
 			$url_base = \untrailingslashit( $imageshop->create_permalinks_url( $media_id, $width, $height, $this->get_attachment_permalink_token_base( $attachment->ID ) ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` is defined by the SaaS API.
@@ -1317,7 +1317,7 @@ class Attachment {
 			sprintf(
 				'%s/%s',
 				$url_base,
-				urlencode( $this->get_attachment_filename( $attachment->ID, ( is_object( $media ) && ! empty( $media->Filename ) ? $media->Filename : $attachment->post_title ) ) ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FileName` is provided by the SaaS API.
+				urlencode( $this->get_attachment_filename( $attachment->ID, ( is_object( $media ) && ! empty( $media->FileName ) ? $media->FileName : $attachment->post_title ) ) ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FileName` is provided by the SaaS API.
 			)
 		);
 	}
