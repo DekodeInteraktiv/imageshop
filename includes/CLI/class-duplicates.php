@@ -7,6 +7,10 @@ declare(strict_types=1);
 
 namespace Imageshop\WordPress\CLI;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	die();
+}
+
 use Imageshop\WordPress\Attachment;
 use Imageshop\WordPress\REST_Controller;
 

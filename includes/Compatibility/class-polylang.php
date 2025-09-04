@@ -2,6 +2,10 @@
 
 namespace Imageshop\WordPress\Compatibility;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	die();
+}
+
 class Polylang {
 
 	/**

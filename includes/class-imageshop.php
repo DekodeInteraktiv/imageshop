@@ -7,6 +7,10 @@ declare(strict_types=1);
 
 namespace Imageshop\WordPress;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	die();
+}
+
 use Imageshop\WordPress\REST\Settings;
 
 /**

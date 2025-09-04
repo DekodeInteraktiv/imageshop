@@ -1,6 +1,10 @@
 <?php
 // Helper functions aimed at improving developer experiences.
 
+if ( ! defined( 'ABSPATH' ) ) {
+	die();
+}
+
 if ( ! function_exists( 'dd' ) ) {
 	function dd() {
 		if ( ! function_exists( 'dump' ) ) {

@@ -17,7 +17,9 @@ declare( strict_types = 1 );
 
 namespace Imageshop\WordPress;
 
-\defined( 'ABSPATH' ) || exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	die();
+}
 
 \define( 'IMAGESHOP_ABSPATH', __DIR__ );
 \define( 'IMAGESHOP_PLUGIN_BASE_NAME', __FILE__ );
