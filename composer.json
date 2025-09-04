@@ -8,7 +8,8 @@
 		}
 	},
     "require-dev": {
-		"wp-coding-standards/wpcs": "^2.3.0"
+		"wp-coding-standards/wpcs": "^2.3.0",
+		"symfony/var-dumper": "^7.3"
 	},
 	"scripts": {
 		"lint": "php ./vendor/squizlabs/php_codesniffer/bin/phpcs",
