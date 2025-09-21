@@ -777,7 +777,6 @@ class Attachment {
 			$data = $media_details['sizes'][ $size ];
 		} elseif ( isset( $media_details['sizes']['original'] ) ) {
 			$data = $media_details['sizes']['original'];
-
 		}
 		// If we still don't have a match at this point, return false.
 		if ( empty( $data ) ) {
@@ -785,7 +784,7 @@ class Attachment {
 		}
 
 		// If, for whatever reason, the original image is missing, get a permalink for the original as a fallback.
-		if ( empty( $data['source_url'] ) ) {
+		if ( empty( $data['source_url'] ) || ! pathinfo( $data['source_url'], PATHINFO_EXTENSION ) ) {
 			$new_source = $this->get_permalink_for_size( $document_id, $media_details['sizes']['original']['file'], $media_details['sizes']['original']['width'], $media_details['sizes']['original']['height'], false );
 
 			// If the returned permalink is empty, return the original image.
