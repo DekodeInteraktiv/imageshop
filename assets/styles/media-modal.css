@@ -1,3 +1,35 @@
+/* Convert the filter list to a flexbox and CSS grid hybrid to accommodate more filters. */
+.media-modal .media-toolbar {
+	display: flex;
+	justify-content: space-between;
+	min-height: 72px;
+	height: auto;
+}
+.media-modal .media-toolbar .media-toolbar-secondary {
+	display: grid;
+	width: 100%;
+	row-gap: 5px;
+	column-gap: 5px;
+	margin: 10px 0;
+	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+/* Visually hide the label as it is absolutely positioned, but retain it for scree nreaders. */
+.media-modal .media-toolbar .media-toolbar-secondary .media-attachments-filter-heading {
+	border: 0;
+	clip-path: inset(50%);
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	padding: 0;
+	position: absolute;
+	width: 1px;
+	word-wrap: normal !important;
+}
+.media-modal .media-toolbar .media-toolbar-secondary .attachment-filters {
+	max-width: initial;
+	margin: 0;
+}
+
 .media-modal .imageshop-edit-toggle-wrapper {
 	width:65%;
 	float:right;
