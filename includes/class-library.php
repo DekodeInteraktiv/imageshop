@@ -63,7 +63,9 @@ class Library {
 
 		\wp_enqueue_style(
 			'media-modal',
-			\plugins_url( '/assets/styles/media-modal.css', IMAGESHOP_PLUGIN_BASE_NAME )
+			\plugins_url( '/assets/styles/media-modal.css', IMAGESHOP_PLUGIN_BASE_NAME ),
+			[],
+			\Imageshop\WordPress\Upgrade::get_current_version()
 		);
 
 		\wp_localize_script(

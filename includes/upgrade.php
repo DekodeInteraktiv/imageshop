@@ -12,20 +12,20 @@ class Upgrade {
 		\add_action( 'init', array( $this, 'maybe_perform_upgrades' ) );
 	}
 
-	public function get_current_version() {
+	public static function get_current_version() {
 		return \get_plugin_data( IMAGESHOP_PLUGIN_BASE_NAME )['Version'] ?? '';
 	}
 
 	public function update_current_version() {
-		\update_option( 'imageshop_version', $this->get_current_version() );
+		\update_option( 'imageshop_version', self::get_current_version() );
 	}
 
-	public function get_stored_version() {
+	public static function get_stored_version() {
 		return \get_option( 'imageshop_version', '1.0.0' );
 	}
 
 	public function maybe_perform_upgrades() {
-		if ( version_compare( $this->get_stored_version(), $this->get_current_version(), '>=' ) ) {
+		if ( version_compare( self::get_stored_version(), self::get_current_version(), '>=' ) ) {
 			return;
 		}
 
@@ -41,8 +41,8 @@ class Upgrade {
 			if ( preg_match( '/^upgrade_(\d+_\d+_\d+)$/', $method, $matches ) ) {
 				$upgrade_version = str_replace( '_', '.', $matches[1] );
 				if (
-					version_compare( $upgrade_version, $this->get_stored_version(), '>' ) &&
-					version_compare( $upgrade_version, $this->get_current_version(), '<=' )
+					version_compare( $upgrade_version, self::get_stored_version(), '>' ) &&
+					version_compare( $upgrade_version, self::get_current_version(), '<=' )
 				) {
 					$this->$method();
 				}
