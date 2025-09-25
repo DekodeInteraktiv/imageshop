@@ -3,7 +3,7 @@
  * Plugin Name: Imageshop DAM Connector
  * Plugin URI:
  * Description: Use the Imageshop media library as your companys one source for all media.
- * Version: 1.3.1
+ * Version: 1.3.2
  * Author: Imageshop
  * Author URI: https://imageshop.org
  * License: GPLv2

@@ -3,7 +3,7 @@ Tags: media library, media cdn, DAM
 Requires at least: 6.2
 Requires PHP: 7.0
 Tested up to: 6.8
-Stable tag: 1.3.1
+Stable tag: 1.3.2
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -37,6 +37,10 @@ We welcome both suggestions, discussions, and code! Check out the project source
 3. A view of the Imageshop advanced settings page.
 
 == Changelog ==
+
+= 1.3.2 (2025-09-26) =
+* Bugfix: Improved handling of original images used by third party plugins, such as SEO ones.
+* Enhancement: Extend the core filter support for larger dropdown menus, previously hiding the category selector.
 
 = 1.3.1 (2025-09-04) =
 * Bugfix: Fixed an issue where only the preview would load for newly uploaded images, and not the full resolution image.
