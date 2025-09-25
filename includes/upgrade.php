@@ -61,4 +61,9 @@ class Upgrade {
 		// Flush cache values to ensure no stale data is hanging around.
 		\wp_cache_flush();
 	}
+
+	public function upgrade_1_3_2() {
+		// We need to perform the same metadata flush as in 1.3.1 to resolve the full size image URLs issue.
+		$this->upgrade_1_3_1();
+	}
 }
