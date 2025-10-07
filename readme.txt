@@ -26,6 +26,10 @@ The plugin will let you add it to any multisite, but each individual site will n
 
 If you at any point wish to stop using Imageshop for your files, you can export any files that have been used in content on your site to your local media library again, before deactivating the plugin.
 
+= What if I am already using plugins to improve my media library? =
+
+The Imageshop DAM plugin replaces any need for media management plugins, as it provides a centralised storage location with categories and media compression built in. As such, any third party plugins that perform similar, or other manipulations of your media files may be incompatible and should be deactivated prior to activating the Imageshop plugin.
+
 = I have an idea for an improvement or enhancement =
 
 We welcome both suggestions, discussions, and code! Check out the project source at https://github.com/DekodeInteraktiv/imageshop
