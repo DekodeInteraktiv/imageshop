@@ -1334,19 +1334,19 @@ class Attachment {
 		$file_type = \wp_check_filetype( $filename );
 
 		// Strip the file extension (if it exists) from the filename, so that we can sanitize the name.
-		$filename = \pathinfo( $filename, PATHINFO_FILENAME );
 		$file_ext = \pathinfo( $filename, PATHINFO_EXTENSION );
+		$filename = \pathinfo( $filename, PATHINFO_FILENAME );
 
 		// We sanitize the remaining filename to remove characters which some browsers or locales may not support properly.
 		$filename = \sanitize_title( $filename );
 
 		if ( ! empty( $file_type['type'] ) && is_string( $file_type['type'] ) && stristr( $file_type['type'], 'image/' ) !== false ) {
-			// Append a file extension for the file, this is always `.jpg` (unless webp support is enabled).
+			// Set the file extension for the file, this is always `.jpg` for images, unless webp support is enabled.
 			$use_webp = \get_option( 'imageshop_webp_support', 'no' );
 			if ( 'yes' === $use_webp ) {
-				$file_ext .= '.webp';
+				$file_ext = '.webp';
 			} else {
-				$file_ext .= '.jpg';
+				$file_ext = '.jpg';
 			}
 		}
 
