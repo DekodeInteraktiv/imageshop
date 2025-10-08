@@ -3,7 +3,7 @@ Tags: media library, media cdn, DAM
 Requires at least: 6.2
 Requires PHP: 7.0
 Tested up to: 6.8
-Stable tag: 1.3.2
+Stable tag: 1.3.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -41,6 +41,11 @@ We welcome both suggestions, discussions, and code! Check out the project source
 3. A view of the Imageshop advanced settings page.
 
 == Changelog ==
+
+= 1.3.3 (2025-10-08) =
+* Bugfix: Fixed an issue where filenames with multiple periods in them would get urlencoded to and be represented as a `+` symbol, which would cause a 404 error for the images in question.
+* Enhancement: Trigger a flush of the Imageshop media permalinks when changing file formats to ensure a faster switch to the new format instead of waiting for caches to clear.
+* Documentation: Introduced FAQ sections covering important information and warnings when combining media manipulation plugins.
 
 = 1.3.2 (2025-09-26) =
 * Bugfix: Improved handling of original images used by third party plugins, such as SEO ones.
