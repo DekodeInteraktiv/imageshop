@@ -71,6 +71,8 @@ class Settings {
 	}
 
 	public function update_settings( WP_REST_Request $request ) {
+		global $wpdb;
+
 		$api_key             = $request->get_param( 'api_key' );
 		$default_interface   = $request->get_param( 'default_interface' );
 		$disable_srcset      = $request->get_param( 'disable_srcset' );
@@ -91,6 +93,12 @@ class Settings {
 
 		if ( ! is_null( $webp_support ) ) {
 			\update_option( 'imageshop_webp_support', $webp_support );
+
+			// Remove old and potentially invalid meta keys.
+			$wpdb->query( "DELETE FROM `" . $wpdb->postmeta . "` WHERE `meta_key` IN ( '_imageshop_permalinks', '_imageshop_media_sizes' )" );
+
+			// Flush cache values to ensure no stale data is hanging around.
+			\wp_cache_flush();
 		}
 
 		if ( ! is_null( $upload_to_imageshop ) ) {
