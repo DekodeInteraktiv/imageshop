@@ -66,8 +66,8 @@ class Helpers {
 
 		$response = array(
 			'message' => \sprintf(
-				'<div class="notice notice-success fade"><p>%s</p></div>',
-				\esc_html__( 'Connection is successfully established. Save the settings.', 'imageshop-dam-connector' )
+				'<div class="bg-success/20 border border-success/30 rounded-md p-4 text-sm text-gray-900 grid grid-cols-1 gap-2 fade"><p class="m-0!">%s</p></div>',
+				\esc_html__( 'Connection is successfully established. You can safely save your settings.', 'imageshop-dam-connector' )
 			),
 		);
 
@@ -77,13 +77,13 @@ class Helpers {
 
 			if ( ! $can_upload ) {
 				$response['message'] = \sprintf(
-					'<div class="notice notice-warning"><p>%s</p></div>',
+					'<div class="bg-warning/20 border border-warning/30 rounded-md p-4 text-sm text-gray-900 grid grid-cols-1 gap-2 fade"><p class="m-0!">%s</p></div>',
 					\esc_html__( 'Could not establish a connection to Imageshop.', 'imageshop-dam-connector' )
 				);
 			}
 		} catch ( \Exception $e ) {
 			$response['message'] = \sprintf(
-				'<div class="notice notice-error"><p>%s</p></div>',
+				'<div class="bg-error/20 border border-error/30 rounded-md p-4 text-sm text-gray-900 grid grid-cols-1 gap-2 fade"><p class="m-0!">%s</p></div>',
 				\sprintf(
 					// translators: 1: Error message. 2: Error code.
 					\esc_html__( 'Could not establish a connection: %1$s (%2$d)', 'imageshop-dam-connector' ),

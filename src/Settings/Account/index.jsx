@@ -7,6 +7,8 @@ import Infobox from "../../components/Infobox";
 export default function Account( { settings, updateSettings } ) {
 	const [ showKeyValidator, setShowKeyValidator ] = useState( false );
 
+	const [ imageshopMessage, setImageshopMessage ] = useState( '' );
+
 	const testApiKey = () => {
 		apiFetch( {
 			path: '/imageshop/v1/settings/test-connection',
@@ -16,7 +18,7 @@ export default function Account( { settings, updateSettings } ) {
 			}
 		} )
 			.then( function( response ) {
-				imageshopMessage.innerHTML = response.message;
+				setImageshopMessage( response.message );
 			} );
 	}
 
@@ -74,8 +76,11 @@ export default function Account( { settings, updateSettings } ) {
 										{ __( 'Test the modified API key', 'imageshop-dam-connector' ) }
 									</button>
 									<span className="italic">
-								You should always test a new API key before clicking through to store your changes.
-							</span>
+										You should always test a new API key before clicking through to store your changes.
+									</span>
+									{ imageshopMessage &&
+										<div dangerouslySetInnerHTML={ { __html: imageshopMessage } } />
+									}
 								</>
 							}
 						</div>
