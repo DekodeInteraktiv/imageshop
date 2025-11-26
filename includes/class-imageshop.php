@@ -30,6 +30,23 @@ class Imageshop {
 		\add_action( 'admin_init', array( $this, 'register_settings' ) );
 		\add_action( 'admin_enqueue_scripts', array( $this, 'register_assets' ) );
 		\add_action( 'update_option_imageshop_api_key', array( $this, 'flush_api_related_caches' ) );
+
+		\add_filter( 'mime_types', array( $this, 'add_imageshop_mime_types' ) );
+	}
+
+	/**
+	 * Register additional mime types that the Imageshop integration may return and use within the WordPress media library.
+	 *
+	 * @param array $wp_get_mime_types
+	 *
+	 * @return array
+	 */
+	public function add_imageshop_mime_types( array $wp_get_mime_types ) {
+		$imageshop_types = array(
+			'svg' => 'image/svg+xml',
+		);
+
+		return array_merge( $wp_get_mime_types, $imageshop_types );
 	}
 
 	/**

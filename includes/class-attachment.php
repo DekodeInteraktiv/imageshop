@@ -40,6 +40,8 @@ class Attachment {
 
 			\add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
 
+			\add_filter( 'wp_calculate_image_srcset_meta', array( $this, 'disable_srcset_for_svg' ), 10, 3 );
+
 			$this->is_srcset_content_img_tag_disabled = \get_option( 'imageshop_disable_srcset', 'no' );
 		}
 	}
@@ -313,6 +315,13 @@ class Attachment {
 		 * content, and as such need a way to opt out of this behaviour.
 		 */
 		if ( ! $this->is_valid_attachment_id( $attachment_id ) && 'yes' === $this->is_srcset_content_img_tag_disabled ) {
+			return $filtered_image;
+		}
+
+		preg_match( '/<img[^>]+src=["\']([^"\']+)["\']/i', $filtered_image, $src_match );
+		$attachment_image_src_url = isset( $src_match[1] ) ? $src_match[1] : '';
+
+		if ( strtolower( substr( $attachment_image_src_url, -4 ) ) === '.svg' ) {
 			return $filtered_image;
 		}
 
@@ -1165,7 +1174,26 @@ class Attachment {
 			}
 		}
 
-		return ( $original_image ? $original_image : ( $original_fallbacks ? $original_fallbacks[0] : $default ) );
+		$original = ( $original_image ? $original_image : ( $original_fallbacks ? $original_fallbacks[0] : $default ) );
+
+		// We need to do some special handling for vector images, as they may not have proper dimensions for the original file.
+		if ( 'VECTOR' === $media->DocumentType ) {// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentType` is defined by the SaaS API.
+			if ( isset( $original->Width ) && 0 === $original->Width && isset( $original->Height ) && 0 === $original->Height ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original->Width` and `$original->Height` are defined by the SaaS API.
+				// Find the entry with the largest `Width` and `Height`, and use that as the original image dimensions.
+				$max_width  = 0;
+				$max_height = 0;
+				foreach ( $media->SubDocumentList as $original_sub_document ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->SubDocumentList` is defined by the SaaS API.
+					if ( isset( $original_sub_document->Width, $original_sub_document->Height ) && ( $original_sub_document->Width > $max_width || $original_sub_document->Height > $max_height ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_sub_document->Width` and `$original_sub_document->Height` are defined by the SaaS API.
+						$max_width  = $original_sub_document->Width; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_sub_document->Width` is defined by the SaaS API.
+						$max_height = $original_sub_document->Height; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_sub_document->Height` is defined by the SaaS API.
+					}
+				}
+				$original->Width  = $max_width; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original->Width` is used by the SaaS API, so we mimic it here.
+				$original->Height = $max_height; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original->Height` is used by the SaaS API, so we mimic it here.
+			}
+		}
+
+		return $original;
 	}
 
 	/**
@@ -1310,7 +1338,7 @@ class Attachment {
 
 		$file_type = \wp_check_filetype( ( is_object( $media ) && ! empty( $media->FileName ) ? $media->FileName : $attachment->post_title ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FileName` is provided by the SaaS API.
 
-		if ( ! empty( $file_type['type'] ) && is_string( $file_type['type'] ) && stristr( $file_type['type'], 'image/' ) !== false ) {
+		if ( ! empty( $file_type['type'] ) && is_string( $file_type['type'] ) && stristr( $file_type['type'], 'image/' ) !== false && stristr( $file_type['type'], 'svg+xml' ) === false ) {
 			$url_base = \untrailingslashit( $imageshop->create_permalinks_url( $media_id, $width, $height, $this->get_attachment_permalink_token_base( $attachment->ID ) ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` is defined by the SaaS API.
 		} else {
 			$url_base = \untrailingslashit( $imageshop->create_subdocument_permalinks_url( $media_id, $original_image->SubDocumentID, $this->get_attachment_permalink_token_base( $attachment->ID ) ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` is defined by the SaaS API.
@@ -1340,7 +1368,7 @@ class Attachment {
 		// We sanitize the remaining filename to remove characters which some browsers or locales may not support properly.
 		$filename = \sanitize_title( $filename );
 
-		if ( ! empty( $file_type['type'] ) && is_string( $file_type['type'] ) && stristr( $file_type['type'], 'image/' ) !== false ) {
+		if ( ! empty( $file_type['type'] ) && is_string( $file_type['type'] ) && stristr( $file_type['type'], 'image/' ) !== false && stristr( $file_type['type'], 'svg+xml' ) === false ) {
 			// Set the file extension for the file, this is always `.jpg` for images, unless webp support is enabled.
 			$use_webp = \get_option( 'imageshop_webp_support', 'no' );
 			if ( 'yes' === $use_webp ) {
@@ -1354,7 +1382,8 @@ class Attachment {
 			$file_ext = '.' . $file_type['ext'];
 		}
 
-		return $filename . $file_ext;
+		// Return a properly formatted filename, with sanitized name and correct extension.
+		return $filename . ( '.' !== substr( $file_ext, 0, 1 ) ? '.' : '' ) . $file_ext;
 	}
 
 	/**
@@ -1410,5 +1439,22 @@ class Attachment {
 		}
 
 		return $media_meta['sizes']['original']['source_url'];
+	}
+
+	/**
+	 * Filter out the `srcset` data for SVG images to prevent unnecessary requests and image manipulations.
+	 *
+	 * @param array $image_meta The image metadata.
+	 * @param array $size_array The size array.
+	 * @param string $image_src  The image source URL.
+	 *
+	 * @return array
+	 */
+	public function disable_srcset_for_svg( array $image_meta, array $size_array, string $image_src ) {
+		if ( strtolower( substr( $image_src, -4 ) ) === '.svg' ) {
+			$image_meta['sizes'] = array();
+		}
+
+		return $image_meta;
 	}
 }

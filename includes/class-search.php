@@ -129,23 +129,23 @@ class Search {
 		}
 
 		// Do not process queries for documents or videos, which are not (yet) handled by Imageshop.
-		$mime_types = ( isset( $_POST['query']['post_mime_type'] ) ? $_POST['query']['post_mime_type'] : [] );
+		$mime_types = ( isset( $_POST['query']['post_mime_type'] ) ? $_POST['query']['post_mime_type'] : array() );
 		if ( ! is_array( $mime_types ) ) {
 			$mime_types = (array) $mime_types;
 		}
 
 		switch ( true ) {
-			case ( in_array( 'image', $mime_types ) ):
-				$mime_type = array( 'IMAGE' );
+			case ( in_array( 'image', $mime_types, true ) ):
+				$mime_type = array( 'IMAGE', 'VECTOR' );
 				break;
-			case ( in_array( 'video', $mime_types ) ):
+			case ( in_array( 'video', $mime_types, true ) ):
 				$mime_type = array( 'VIDEO' );
 				break;
-			case ( in_array( 'audio', $mime_types ) ):
+			case ( in_array( 'audio', $mime_types, true ) ):
 				$mime_type = array( 'AUDIO' );
 				break;
 			default:
-				$mime_type = array( 'IMAGE', 'VIDEO', 'AUDIO', 'DOCUMENT' );
+				$mime_type = array( 'IMAGE', 'VECTOR', 'VIDEO', 'AUDIO', 'DOCUMENT' );
 		}
 
 		$this->search_attributes = array(
@@ -158,7 +158,7 @@ class Search {
 			'DocumentType'  => $mime_type,
 		);
 
-		if ( isset( $_POST['query']['imageshop_language'] ) && ! empty( $_POST['query']['imageshop_language'] ) ) {
+		if ( ! empty( $_POST['query']['imageshop_language'] ) ) {
 			$this->imageshop->set_language( $_POST['query']['imageshop_language'] );
 		}
 
@@ -208,7 +208,7 @@ class Search {
 		}
 
 		foreach ( $unordered_consent_notes as $consent_note ) {
-			if ( ! isset( $consent_note->DocumentId ) ) {
+			if ( ! isset( $consent_note->DocumentId ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$consent_note->DocumentId` is provided by the SaaS API.
 				continue;
 			}
 
@@ -239,7 +239,7 @@ class Search {
 					if ( ! is_array( $default_value ) ) {
 						$default_value = array( $default_value );
 					}
-					$allowed_values = array( 'ALL', 'IMAGE', 'VIDEO', 'AUDIO', 'DOCUMENT', 'OTHER' );
+					$allowed_values = array( 'ALL', 'IMAGE', 'VECTOR', 'VIDEO', 'AUDIO', 'DOCUMENT', 'OTHER' );
 
 					$attributes[ $field ] = array();
 
@@ -407,7 +407,12 @@ class Search {
 
 		if ( $media_file_type && \stristr( $media_file_type, 'image' ) ) {
 
-			$full_size_url = $this->attachment->get_permalink_for_size( $media->DocumentID, $media->FileName, $original_media->Width, $original_media->Height, false ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID`, `$media->FileName`, `$original_media->Width`, and `$oreiginal_media->Height` are provided by the SaaS API.
+			if ( 'VECTOR' === $media->DocumentType ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentType` is provided by the SaaS API.
+				// For vector images, we need to get the full size URL differently.
+				$full_size_url = $this->attachment->get_permalink_for_size( $media->DocumentID, $media->FileName, $original_media->Width, $original_media->Height, false, true ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` and `$media->FileName` are provided by the SaaS API.
+			} else {
+				$full_size_url = $this->attachment->get_permalink_for_size( $media->DocumentID, $media->FileName, $original_media->Width, $original_media->Height, false ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID`, `$media->FileName`, `$original_media->Width`, and `$oreiginal_media->Height` are provided by the SaaS API.
+			}
 
 			if ( null !== $full_size_url ) {
 				$full_size_url = $full_size_url['source_url'];
@@ -450,10 +455,9 @@ class Search {
 			)
 		);
 
-		$alt_text = '';
-		if ( isset( $media->AltText ) && ! empty( $media->AltText ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->AltText` is provided by the SaaS API.
+		if ( ! empty( $media->AltText ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->AltText` is provided by the SaaS API.
 			$alt_text = $media->AltText; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->AltText` is provided by the SaaS API.
-		} elseif ( isset( $media->Description ) && ! empty( $media->Description ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->Description` is provided by the SaaS API.
+		} elseif ( ! empty( $media->Description ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->Description` is provided by the SaaS API.
 			$alt_text = $media->Description; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->Description` is provided by the SaaS API.
 		} else {
 			$alt_text = $media->Name; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->Name` is provided by the SaaS API.
