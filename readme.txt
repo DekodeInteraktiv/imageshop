@@ -3,7 +3,7 @@ Tags: media library, media cdn, DAM
 Requires at least: 6.2
 Requires PHP: 7.0
 Tested up to: 6.9
-Stable tag: 1.3.3
+Stable tag: 1.4.0
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,6 +42,10 @@ We welcome both suggestions, discussions, and code! Check out the project source
 
 == Changelog ==
 
+= 1.4.0 (2025-11-28) =
+* Feature: Added support for SVG vector images.
+* Bugfix: Fixed an issue where you might not get a status response when testing a new API key in the settings panel.
+
 = 1.3.3 (2025-10-08) =
 * Bugfix: Fixed an issue where filenames with multiple periods in them would get urlencoded to and be represented as a `+` symbol, which would cause a 404 error for the images in question.
 * Enhancement: Trigger a flush of the Imageshop media permalinks when changing file formats to ensure a faster switch to the new format instead of waiting for caches to clear.
@@ -61,13 +65,3 @@ We welcome both suggestions, discussions, and code! Check out the project source
 * Feature: Support for video embeds from Imageshop.
 * Enhancement: Added a compatibility layer to support synchronised attributes between WooCommerce products when using Polylang.
 * Maintenance: Changed the minimum required WordPress and PHP version to 6.2 and 7.0 respectively.
-
-= 1.2.0 (2025-06-27) =
-* Feature: Pretty permalinks for Imageshop media items. Your media will now have a reader-friendly name in the URL.
-* Feature: WebP Support. The plugin will now automatically serve up WebP images if you've enabled it, head on over to the settings page to enable it.
-* Feature: Disable uploads to Imageshop. If you ever wanted to keep your WordPress media separate, you can now disable the automatic uploads to Imageshop, and only use the plugin to quickly access and insert media from Imageshop.
-* Feature: Consent documentation. The plugin will now show if consent is given by individuals in an image, and what platforms they've given consent for their likeness to be used on.
-* Enhancement: Rights and expiration date fields will now always be visible, even if no information is available, to give a more consistent user interface.
-* Enhancement: Visual overhaul of the Imageshop settings page and onboarding experience.
-* Bugfix: Fixed an issue where images with unexpected data values would prevent further browsing through paginated content.
-* Bugfix: Fixed a case where the visual alt-text for an image would show the description text when updating Imageshop details, and then revert to its intended value when refreshing the page.

@@ -1,3 +1,13 @@
+= 1.2.0 (2025-06-27) =
+* Feature: Pretty permalinks for Imageshop media items. Your media will now have a reader-friendly name in the URL.
+* Feature: WebP Support. The plugin will now automatically serve up WebP images if you've enabled it, head on over to the settings page to enable it.
+* Feature: Disable uploads to Imageshop. If you ever wanted to keep your WordPress media separate, you can now disable the automatic uploads to Imageshop, and only use the plugin to quickly access and insert media from Imageshop.
+* Feature: Consent documentation. The plugin will now show if consent is given by individuals in an image, and what platforms they've given consent for their likeness to be used on.
+* Enhancement: Rights and expiration date fields will now always be visible, even if no information is available, to give a more consistent user interface.
+* Enhancement: Visual overhaul of the Imageshop settings page and onboarding experience.
+* Bugfix: Fixed an issue where images with unexpected data values would prevent further browsing through paginated content.
+* Bugfix: Fixed a case where the visual alt-text for an image would show the description text when updating Imageshop details, and then revert to its intended value when refreshing the page.
+
 = 1.1.2 (2025-04-04) =
 * Media filter: Ensure filters are always rendered after the error fixes in 1.1.1
 * Settings: Fixed error preventing feedback messages from rendering.
