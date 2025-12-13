@@ -84,6 +84,8 @@ function imageshop_incompatibile( $msg ) {
 \register_activation_hook(
 	__FILE__,
 	function() {
+		global $wpdb;
+
 		if ( \is_admin() && ( ! \defined( 'DOING_AJAX' ) || ! DOING_AJAX ) ) {
 			if ( \version_compare( PHP_VERSION, '7.0', '<' ) ) {
 				imageshop_incompatibile(
@@ -94,6 +96,64 @@ function imageshop_incompatibile( $msg ) {
 				);
 			}
 		}
+
+		$wpdb->query(
+			'UPDATE
+				`' . $wpdb->posts . '` AS p
+			SET
+				p.post_type = "attachment"
+			WHERE
+				p.post_type = "attachment-imageshop"
+			AND (
+			    EXISTS (
+			        SELECT 1
+			        FROM `' . $wpdb->postmeta . '` AS pm
+			        WHERE pm.post_id = p.ID
+			        AND pm.meta_key IN ("_imageshop_permalinks", "_imageshop_media_sizes")
+			    )
+			    OR NOT EXISTS (
+			        SELECT 1
+			        FROM `' . $wpdb->postmeta . '` AS pm2
+			        WHERE pm2.post_id = p.ID
+			        AND pm2.meta_key = "_wp_attached_file"
+			        AND pm2.meta_value IS NOT NULL
+			        AND pm2.meta_value != ""
+			    )
+			)'
+		);
+	}
+);
+
+// When deactivating the plugin, hide any media that is only tied to Imageshop to give the end users a better experience if they are just testing something.
+\register_deactivation_hook(
+	__FILE__,
+	function() {
+		global $wpdb;
+
+		$wpdb->query(
+			'UPDATE
+				`' . $wpdb->posts . '` AS p
+			SET
+				p.post_type = "attachment-imageshop"
+			WHERE
+				p.post_type = "attachment"
+			AND (
+			    EXISTS (
+			        SELECT 1
+			        FROM `' . $wpdb->postmeta . '` AS pm
+			        WHERE pm.post_id = p.ID
+			        AND pm.meta_key IN ("_imageshop_permalinks", "_imageshop_media_sizes")
+			    )
+			    OR NOT EXISTS (
+			        SELECT 1
+			        FROM `' . $wpdb->postmeta . '` AS pm2
+			        WHERE pm2.post_id = p.ID
+			        AND pm2.meta_key = "_wp_attached_file"
+			        AND pm2.meta_value IS NOT NULL
+			        AND pm2.meta_value != ""
+			    )
+			)'
+		);
 	}
 );
 

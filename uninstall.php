@@ -27,7 +27,11 @@ $attachments = $wpdb->get_results(
 			    {$wpdb->postmeta} AS pm
 			        ON (p.ID = pm.post_id)
 			WHERE
-				p.post_type = 'attachment'
+				(
+					p.post_type = 'attachment'
+					OR
+					p.post_type = 'attachment-imageshop'
+				)
 			AND
 			(
 				pm.meta_key = '_imageshop_document_id'
