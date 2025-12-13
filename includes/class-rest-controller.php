@@ -576,7 +576,17 @@ class REST_Controller {
 	 */
 	public function get_categories( $interface = null, $lang = null ) {
 		if ( null === $interface ) {
-			$interface = \get_option( 'imageshop_upload_interface' );
+			$interface = \get_option( 'imageshop_upload_interface', '' );
+
+			if ( empty( $interface ) ) {
+				$interface_list = $this->get_interfaces();
+				// If we still can't get an interface, we need ot abort as it is required.
+				if ( empty( $interface_list ) ) {
+					return array();
+				}
+
+				$interface = $interface_list[0]->Id; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$interface->Id` is defined by the third party SaaS API.
+			}
 		}
 		if ( null === $lang ) {
 			$lang = $this->language;

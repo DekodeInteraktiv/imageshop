@@ -70,11 +70,9 @@ class Imageshop {
 	public function onboarding_completed() {
 		if ( null === $this->onboarding_completed ) {
 			$completed = false;
-
-			$interface = \get_option( 'imageshop_upload_interface', '' );
 			$api_key   = \get_option( 'imageshop_api_key', '' );
 
-			if ( ! empty( $interface ) && ! empty( $api_key ) ) {
+			if ( ! empty( $api_key ) ) {
 				$completed = true;
 			}
 
