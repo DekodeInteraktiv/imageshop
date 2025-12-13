@@ -1370,7 +1370,7 @@ class Attachment {
 
 		if ( ! empty( $file_type['type'] ) && is_string( $file_type['type'] ) && stristr( $file_type['type'], 'image/' ) !== false && stristr( $file_type['type'], 'svg+xml' ) === false ) {
 			// Set the file extension for the file, this is always `.jpg` for images, unless webp support is enabled.
-			$use_webp = \get_option( 'imageshop_webp_support', 'no' );
+			$use_webp = \get_option( 'imageshop_webp_support', 'yes' );
 			if ( 'yes' === $use_webp ) {
 				$file_ext = '.webp';
 			} else {

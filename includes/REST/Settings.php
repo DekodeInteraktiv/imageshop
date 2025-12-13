@@ -44,7 +44,7 @@ class Settings {
 		$api_key             = \get_option( 'imageshop_api_key', '' );
 		$default_interface   = \get_option( 'imageshop_upload_interface', '' );
 		$disable_srcset      = \get_option( 'imageshop_disable_srcset', 'no' );
-		$webp_support        = \get_option( 'imageshop_webp_support', 'no' );
+		$webp_support        = \get_option( 'imageshop_webp_support', 'yes' );
 		$upload_to_imageshop = \get_option( 'imageshop_upload_to_imageshop', 'no' );
 
 		$valid_api = ! empty( $api_key ) && $imageshop->test_valid_token();
