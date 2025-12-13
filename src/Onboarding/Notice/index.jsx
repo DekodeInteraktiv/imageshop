@@ -42,6 +42,10 @@ const Notice = () => {
 					{ __( 'The Imageshop integration is almost ready to use, please complete the setup steps to start using Imageshop directly from your media library.', 'imageshop-dam-connector' ) }
 				</p>
 
+				<p className="font-semibold">
+					{ __( 'Note that the use of additional 3rd party plugins that manage or modify the WordPress media library in any way may lead to unexpected behavior. We recommend disabling any such plugin before completing the Imageshop setup.', 'imageshop-dam-connector' ) }
+				</p>
+
 				<p>
 					<button type="button" className="button button-primary" onClick={ () => setShowWizard( true ) }>
 						{ __( 'Complete setup', 'imageshop-dam-connector' ) }

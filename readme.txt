@@ -44,6 +44,7 @@ We welcome both suggestions, discussions, and code! Check out the project source
 
 = 1.5.0 (TBD) =
 * Media: Change the default setting for media uploads to not synchronize to Imageshop automatically, separating responsibilities.
+* Onboarding: Add notice to onbaording flow about the potential conflicts multiple media management plugins can have with each other.
 
 = 1.4.0 (2025-11-28) =
 * Feature: Added support for SVG vector images.
