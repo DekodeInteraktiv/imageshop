@@ -170,6 +170,7 @@ class Library {
 			.wp-admin #imageshop-posts-per-page,
 			.wp-admin.upload-php #media-attachment-filters,
 			.wp-admin.upload-php #media-attachment-date-filters,
+			.wp-admin.post-php #media-attachment-filters,
 			.wp-admin.post-php #media-attachment-date-filters,
 			.wp-admin.upload-php .view-switch .view-list,
 			.wp-admin.upload-php .select-mode-toggle-button{
