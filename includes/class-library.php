@@ -51,8 +51,24 @@ class Library {
 	public function add_custom_media_modal_filters() {
 		$imageshop = REST_Controller::get_instance();
 
+		if ( ! function_exists( 'get_current_screen' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/screen.php';
+		}
+		$screen = get_current_screen();
+		if ( $screen && $screen->id === 'upload' ) {
+			\wp_enqueue_script(
+				'imageshop-media-library-filters',
+				\plugins_url( '/assets/scripts/media-library.js', IMAGESHOP_PLUGIN_BASE_NAME ),
+				array(
+					'media-editor',
+					'media-views',
+					'wp-api-fetch',
+				)
+			);
+		}
+
 		\wp_enqueue_script(
-			'imageshop-media-library-filters',
+			'imageshop-media-library-modal-filters',
 			\plugins_url( '/assets/scripts/media-library-modal.js', IMAGESHOP_PLUGIN_BASE_NAME ),
 			array(
 				'media-editor',
@@ -69,7 +85,7 @@ class Library {
 		);
 
 		\wp_localize_script(
-			'imageshop-media-library-filters',
+			'imageshop-media-library-modal-filters',
 			'ImageshopMediaLibrary',
 			array(
 				'sources'           => array(
@@ -91,6 +107,14 @@ class Library {
 						'label'     => esc_html__( 'Media library source origin', 'imageshop-dam-connector' ),
 						'imageshop' => esc_html__( 'Search Imageshop', 'imageshop-dam-connector' ),
 						'wordpress' => esc_html__( 'Search WordPress library', 'imageshop-dam-connector' ),
+					),
+					'mime_type' => array(
+						'label'     => esc_html__( 'Media type', 'imageshop-dam-connector' ),
+						'all'       => esc_html__( 'All media types', 'imageshop-dam-connector' ),
+						'images'    => esc_html__( 'Images', 'imageshop-dam-connector' ),
+						'videos'    => esc_html__( 'Videos', 'imageshop-dam-connector' ),
+						'audio'     => esc_html__( 'Audio files', 'imageshop-dam-connector' ),
+						'documents' => esc_html__( 'Documents', 'imageshop-dam-connector' ),
 					),
 					'interfaces' => array(
 						'label' => esc_html__( 'Imageshop Interface', 'imageshop-dam-connector' ),

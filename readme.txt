@@ -46,6 +46,7 @@ We welcome both suggestions, discussions, and code! Check out the project source
 * Media: Change the default setting for media uploads to not synchronize to Imageshop automatically, separating responsibilities.
 * Media: Made WebP conversion the default value for new installations.
 * Media: When deactivating the Imageshop integration, hide attachment references from the media library to create a better user experience.
+* Media: Add filter options for media types to the media library screen.
 * Onboarding: Add notice to onboarding flow about the potential conflicts multiple media management plugins can have with each other.
 
 = 1.4.0 (2025-11-28) =

@@ -144,6 +144,9 @@ class Search {
 			case ( in_array( 'audio', $mime_types, true ) ):
 				$mime_type = array( 'AUDIO' );
 				break;
+			case ( in_array( 'document', $mime_types, true ) ):
+				$mime_type = array( 'DOCUMENT' );
+				break;
 			default:
 				$mime_type = array( 'IMAGE', 'VECTOR', 'VIDEO', 'AUDIO', 'DOCUMENT' );
 		}
