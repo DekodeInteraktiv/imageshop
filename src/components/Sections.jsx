@@ -25,9 +25,16 @@ export function SectionHeader({ children, className }) {
 	);
 }
 
-export function SectionTitle({ children, className }) {
+export function SectionTitle({ children, className, subtitle = false }) {
+	const classnames = clsx(
+		! subtitle
+			? 'text-lg font-semibold m-0! pb-2 border-b-1 border-accent/20'
+			: 'text-base! font-semibold m-0! pb-2',
+		className
+	)
+
 	return (
-		<h3 className={clsx('text-lg font-semibold m-0! pb-2 border-b-1 border-accent/20', className)}>
+		<h3 className={classnames}>
 			{children}
 		</h3>
 	);

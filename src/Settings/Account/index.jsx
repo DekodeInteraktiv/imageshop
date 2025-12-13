@@ -33,6 +33,10 @@ export default function Account( { settings, updateSettings } ) {
 		setShowKeyValidator( newKey !== settings.original_api_key );
 	}
 
+	const updateImageshopUploadPreference = ( newState ) => {
+		updateSettings( { upload_to_imageshop: newState ? 'yes' : 'no' } );
+	}
+
 	return (
 		<div>
 			<Infobox className="grid grid-cols-1 gap-2">
@@ -90,28 +94,64 @@ export default function Account( { settings, updateSettings } ) {
 				<Section>
 					<SectionHeader>
 						<SectionTitle>
-							{ __( 'Imageshop interfaces', 'imageshop-dam-connector' ) }
+							{ __( 'Upload images to Imageshop (not recommended)', 'imageshop-dam-connector' ) }
 						</SectionTitle>
 						<SectionDescription>
-							{ __( 'When uploading files to WordPress, the files are automatically stored in your preferred interface on the Imageshop platform. If you wish to keep your website media separate, you can always reach out to have a dedicated WordPress interface created for you.', 'imageshop-dam-connector' ) }
+							{ __( 'Even if you use the Imageshop integration on your site, you can continue to upload images directly to WordPress. You also have the option to have these images added to Imageshop. However, this is not something we recommend.', 'imageshop-dam-connector' ) }
 						</SectionDescription>
+						<SectionDescription className="font-semibold">
+							{ __( 'To ensure your image archive maintains the highest quality possible, we recommend that only files that will be used across multiple channels are uploaded directly to Imageshop for distribution.', 'imageshop-dam-connector' ) }
+						</SectionDescription>
+						<SectionDescription>
+							{ __( 'Files that will only be used on your WordPress site will then not clutter your Imageshop archive, and for this reason we recommend keeping this option unchecked.', 'imageshop-dam-connector' ) }
+						</SectionDescription>
+
+						<SectionDescription className="italic">
+							{ __( 'This setting does not affect existing images, and is disabled by default.', 'imageshop-dam-connector' ) }
+						</SectionDescription>
+
+						<div>
+							<label className="inline-block py-2">
+								<input
+									type="checkbox"
+									checked={ settings.upload_to_imageshop === 'yes' }
+									onChange={ ( event ) => updateImageshopUploadPreference( event.target.checked ) }
+								/>
+								<span>
+								{ __( 'Upload a copy of all images to Imageshop', 'imageshop-dam-connector' ) }
+							</span>
+							</label>
+						</div>
 					</SectionHeader>
 
-					<div className="grid grid-cols-1 gap-2">
-						<label htmlFor="default_interface">{ __( 'Default interface:', 'imageshop-dam-connector' ) }</label>
-						<select className="w-full" id="default_interface">
-							<option value="">&mdash; { __( 'Select your default interface', 'imageshop-dam-connector' ) } &mdash;</option>
-							{ settings?.interfaces && settings?.interfaces?.map( ( apiInterface ) => (
-								<option
-									key={ apiInterface.Id }
-									value={ apiInterface.Id }
-									selected={ parseInt( settings.default_interface ) === apiInterface.Id }
-								>
-									{ apiInterface.Name }
-								</option>
-							) ) }
-						</select>
-					</div>
+					{ settings.upload_to_imageshop === 'yes' &&
+						<>
+							<SectionHeader>
+								<SectionTitle subtitle={true}>
+									{ __( 'Imageshop interfaces', 'imageshop-dam-connector' ) }
+								</SectionTitle>
+								<SectionDescription>
+									{ __( 'If you still choose to have your media files uploaded to Imageshop via WordPress, you need to choose which interface these files will be saved to by default. It is recommended to put in a request with Imageshop to have a dedicated interface created for this, usually with a name of "WordPress".', 'imageshop-dam-connector' ) }
+								</SectionDescription>
+							</SectionHeader>
+
+							<div className="grid grid-cols-1 gap-2">
+								<label className="sr-only" htmlFor="default_interface">{ __( 'Default interface:', 'imageshop-dam-connector' ) }</label>
+								<select className="w-full" id="default_interface">
+									<option value="">&mdash; { __( 'Select your default interface', 'imageshop-dam-connector' ) } &mdash;</option>
+									{ settings?.interfaces && settings?.interfaces?.map( ( apiInterface ) => (
+										<option
+											key={ apiInterface.Id }
+											value={ apiInterface.Id }
+											selected={ parseInt( settings.default_interface ) === apiInterface.Id }
+										>
+											{ apiInterface.Name }
+										</option>
+									) ) }
+								</select>
+							</div>
+						</>
+					}
 				</Section>
 			</Sections>
 		</div>

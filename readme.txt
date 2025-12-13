@@ -42,26 +42,9 @@ We welcome both suggestions, discussions, and code! Check out the project source
 
 == Changelog ==
 
+= 1.5.0 (TBD) =
+* Media: Change the default setting for media uploads to not synchronize to Imageshop automatically, separating responsibilities.
+
 = 1.4.0 (2025-11-28) =
 * Feature: Added support for SVG vector images.
 * Bugfix: Fixed an issue where you might not get a status response when testing a new API key in the settings panel.
-
-= 1.3.3 (2025-10-08) =
-* Bugfix: Fixed an issue where filenames with multiple periods in them would get urlencoded to and be represented as a `+` symbol, which would cause a 404 error for the images in question.
-* Enhancement: Trigger a flush of the Imageshop media permalinks when changing file formats to ensure a faster switch to the new format instead of waiting for caches to clear.
-* Documentation: Introduced FAQ sections covering important information and warnings when combining media manipulation plugins.
-
-= 1.3.2 (2025-09-26) =
-* Bugfix: Improved handling of original images used by third party plugins, such as SEO ones.
-* Enhancement: Extend the core filter support for larger dropdown menus, previously hiding the category selector.
-
-= 1.3.1 (2025-09-04) =
-* Bugfix: Fixed an issue where only the preview would load for newly uploaded images, and not the full resolution image.
-* Bugfix: Fixed a bug where file extensions would not always be applied to generic files, only images.
-* Feature: Added support for fetching audio files within the media library from Imageshop.
-
-= 1.3.0 (2025-08-26) =
-* Feature: Support generic files (such as PDF's or Office documents) in the media manager.
-* Feature: Support for video embeds from Imageshop.
-* Enhancement: Added a compatibility layer to support synchronised attributes between WooCommerce products when using Polylang.
-* Maintenance: Changed the minimum required WordPress and PHP version to 6.2 and 7.0 respectively.

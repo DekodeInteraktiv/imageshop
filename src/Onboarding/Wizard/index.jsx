@@ -3,7 +3,6 @@ import { __ } from '@wordpress/i18n';
 
 import Introduction from "./Steps/Introduction";
 import Tokens from "./Steps/Tokens";
-import Interfaces from "./Steps/Interfaces";
 import Completed from "./Steps/Completed";
 import {XCircleIcon} from "@heroicons/react/24/outline";
 
@@ -36,9 +35,6 @@ const Wizard = ( { setShowWizard, setShowNotice } ) => {
 								<Tokens setStep={ setStep } />
 							}
 							{ 3 === step &&
-								<Interfaces setStep={ setStep } />
-							}
-							{ 4 === step &&
 								<Completed setShowNotice={ setShowNotice } setShowWizard={ setShowWizard } />
 							}
 						</div>

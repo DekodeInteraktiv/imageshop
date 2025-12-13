@@ -11,7 +11,7 @@ const Completed = ( { setShowWizard, setShowNotice } ) => {
 		<>
 			<div className="p-4">
 				<p>
-					{ __( 'Your site has now been configured to use all media via Imageshop.', 'imageshop-dam-connector' ) }
+					{ __( 'Your site has now been configured to retrieve media from Imageshop.', 'imageshop-dam-connector' ) }
 				</p>
 			</div>
 

@@ -629,7 +629,7 @@ class Attachment {
 	 */
 	public function export_to_imageshop( $post_id, $force = false ) {
 		// If automated uploading of documents to Imageshop is disabled, bail early.
-		$upload_to_imageshop = \get_option( 'imageshop_upload_to_imageshop', 'yes' );
+		$upload_to_imageshop = \get_option( 'imageshop_upload_to_imageshop', 'no' );
 		if ( 'yes' !== $upload_to_imageshop && 'force' !== $force ) {
 			return $post_id;
 		}

@@ -84,7 +84,7 @@ const Tokens = ( { setStep } ) => {
 
 					{ validToken &&
 						<button type="button" className="cursor-pointer bg-primary py-2 px-4 text-white rounded-md hover:bg-accent" onClick={ () => setStep( 3 ) }>
-							{ __( 'Continue to upload settings', 'imageshop-dam-connector' ) }
+							{ __( 'Save and continue', 'imageshop-dam-connector' ) }
 						</button>
 					}
 				</div>
