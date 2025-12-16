@@ -115,6 +115,7 @@ class Library {
 						'videos'    => esc_html__( 'Videos', 'imageshop-dam-connector' ),
 						'audio'     => esc_html__( 'Audio files', 'imageshop-dam-connector' ),
 						'documents' => esc_html__( 'Documents', 'imageshop-dam-connector' ),
+						'vectors'   => esc_html__( 'Vector graphics', 'imageshop-dam-connector' ),
 					),
 					'interfaces' => array(
 						'label' => esc_html__( 'Imageshop Interface', 'imageshop-dam-connector' ),

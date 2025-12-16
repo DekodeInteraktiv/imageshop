@@ -21,24 +21,6 @@
 				priority: 10
 			}
 
-			filters.image = {
-				// Change this: use whatever default label you'd like
-				text: ( ImageshopMediaLibrary.labels ? ImageshopMediaLibrary.labels.mime_type.images : 'Images' ),
-				props: {
-					// Change this: key needs to be the WP_Query var for the taxonomy
-					post_mime_type: 'image'
-				},
-				priority: 10
-			}
-			filters.video = {
-				// Change this: use whatever default label you'd like
-				text: ( ImageshopMediaLibrary.labels ? ImageshopMediaLibrary.labels.mime_type.videos : 'Videos' ),
-				props: {
-					// Change this: key needs to be the WP_Query var for the taxonomy
-					post_mime_type: 'video'
-				},
-				priority: 10
-			}
 			filters.audio = {
 				// Change this: use whatever default label you'd like
 				text: ( ImageshopMediaLibrary.labels ? ImageshopMediaLibrary.labels.mime_type.audio : 'Audio' ),
@@ -54,6 +36,33 @@
 				props: {
 					// Change this: key needs to be the WP_Query var for the taxonomy
 					post_mime_type: 'document'
+				},
+				priority: 10
+			}
+			filters.image = {
+				// Change this: use whatever default label you'd like
+				text: ( ImageshopMediaLibrary.labels ? ImageshopMediaLibrary.labels.mime_type.images : 'Images' ),
+				props: {
+					// Change this: key needs to be the WP_Query var for the taxonomy
+					post_mime_type: 'image_only'
+				},
+				priority: 10
+			}
+			filters.vector = {
+				// Change this: use whatever default label you'd like
+				text: ( ImageshopMediaLibrary.labels ? ImageshopMediaLibrary.labels.mime_type.vectors : 'Vector graphics' ),
+				props: {
+					// Change this: key needs to be the WP_Query var for the taxonomy
+					post_mime_type: 'vector'
+				},
+				priority: 10
+			}
+			filters.video = {
+				// Change this: use whatever default label you'd like
+				text: ( ImageshopMediaLibrary.labels ? ImageshopMediaLibrary.labels.mime_type.videos : 'Videos' ),
+				props: {
+					// Change this: key needs to be the WP_Query var for the taxonomy
+					post_mime_type: 'video'
 				},
 				priority: 10
 			}

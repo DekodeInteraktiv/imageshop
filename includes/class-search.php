@@ -135,6 +135,9 @@ class Search {
 		}
 
 		switch ( true ) {
+			case ( in_array( 'image_only', $mime_types, true ) ):
+				$mime_type = array( 'IMAGE' );
+				break;
 			case ( in_array( 'image', $mime_types, true ) ):
 				$mime_type = array( 'IMAGE', 'VECTOR' );
 				break;
@@ -146,6 +149,9 @@ class Search {
 				break;
 			case ( in_array( 'document', $mime_types, true ) ):
 				$mime_type = array( 'DOCUMENT' );
+				break;
+			case ( in_array( 'vector', $mime_types, true ) ):
+				$mime_type = array( 'VECTOR' );
 				break;
 			default:
 				$mime_type = array( 'IMAGE', 'VECTOR', 'VIDEO', 'AUDIO', 'DOCUMENT' );
