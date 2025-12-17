@@ -47,6 +47,8 @@ We welcome both suggestions, discussions, and code! Check out the project source
 * Media: Made WebP conversion the default value for new installations.
 * Media: When deactivating the Imageshop integration, hide attachment references from the media library to create a better user experience.
 * Media: Add filter options for media types to the media library screen.
+* Media: Consistently display thumbnails for video files.
+* Media: Keep showing previews of non-image media when viewing media details in the media library.
 * Media Modal: Hide the media type filter from the modal inserter, as it is context aware and plays no role with the Imageshop plugin active.
 * Onboarding: Add notice to onboarding flow about the potential conflicts multiple media management plugins can have with each other.
 
