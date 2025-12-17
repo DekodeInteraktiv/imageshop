@@ -349,6 +349,14 @@ class Search {
 			$interface = \get_option( 'imageshop_upload_interface' );
 		}
 
+		// A list of thumbnail sizes in prioritized order.
+		$available_thumbnail_sizes = array(
+			'FullscreenThumbUrl',
+			'LargeThumbUrl',
+			'DetailThumbUrl',
+			'ListThumbUrl',
+		);
+
 		$wp_post = \get_posts(
 			array(
 				'posts_per_page' => 1,
@@ -435,7 +443,7 @@ class Search {
 					),
 				);
 			}
-		} elseif ( $media_file_type && ! \stristr( $media_file_type, 'image' ) ) {
+		} elseif ( $media_file_type && ! \stristr( $media_file_type, 'image' ) && ( \stristr( $media_file_type, 'video' ) || \stristr( $media_file_type, 'audio' ) ) ) {
 			$full_size_url = $this->attachment->get_permalink_for_size( $media->DocumentID, $media->FileName, 0, 0, false , true ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID`, `$media->FileName`, `$original_media->Width`, and `$oreiginal_media->Height` are provided by the SaaS API.
 
 			if ( null !== $full_size_url ) {
@@ -450,15 +458,26 @@ class Search {
 					),
 				);
 			}
-		}
+		} elseif ( $media_file_type && ! \stristr( $media_file_type, 'image' ) ) {
+			$full_size_url = null;
+			foreach ( $available_thumbnail_sizes as $thumbnail_size ) {
+				if ( ! empty( $media->{$thumbnail_size} ) ) {
+					$full_size_url = $media->{$thumbnail_size}; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->{$thumbnail_size}` is provided by the SaaS API.
+					break;
+				}
+			}
 
-		// A list of thumbnail sizes in prioritized order.
-		$available_thumbnail_sizes = array(
-			'FullscreenThumbUrl',
-			'LargeThumbUrl',
-			'DetailThumbUrl',
-			'ListThumbUrl',
-		);
+			if ( null !== $full_size_url ) {
+				$image_sizes = array(
+					'full' => array(
+						'url'         => $full_size_url,
+						'width'       => 0, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Width` is provided by the SaaS API.
+						'height'      => 0, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Height` is provided by the SaaS API.
+						'orientation' => 'landscape',
+					),
+				);
+			}
+		}
 
 		$preview_thumbnail_url = null;
 		foreach ( $available_thumbnail_sizes as $thumbnail_size ) {
