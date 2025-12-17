@@ -452,11 +452,27 @@ class Search {
 			}
 		}
 
+		// A list of thumbnail sizes in prioritized order.
+		$available_thumbnail_sizes = array(
+			'FullscreenThumbUrl',
+			'LargeThumbUrl',
+			'DetailThumbUrl',
+			'ListThumbUrl',
+		);
+
+		$preview_thumbnail_url = null;
+		foreach ( $available_thumbnail_sizes as $thumbnail_size ) {
+			if ( ! empty( $media->{$thumbnail_size} ) ) {
+				$preview_thumbnail_url = $media->{$thumbnail_size}; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->{$thumbnail_size}` is provided by the SaaS API.
+				break;
+			}
+		}
+
 		$image_sizes = array_merge(
 			$image_sizes,
 			array(
 				'medium'    => array(
-					'url' => $media->FullscreenThumbUrl, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FullscreenThumbUrl` are provided by the SaaS API.
+					'url' => $preview_thumbnail_url,
 				),
 				'thumbnail' => array(
 					'url' => $media->DetailThumbUrl, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DetailThumbUrl` are provided by the SaaS API.
