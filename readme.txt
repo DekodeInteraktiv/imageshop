@@ -3,7 +3,7 @@ Tags: media library, media cdn, DAM
 Requires at least: 6.2
 Requires PHP: 7.0
 Tested up to: 6.9
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,7 +42,7 @@ We welcome both suggestions, discussions, and code! Check out the project source
 
 == Changelog ==
 
-= 1.5.0 (TBD) =
+= 1.5.0 (2025-12-18) =
 * Media: Change the default setting for media uploads to not synchronize to Imageshop automatically, separating responsibilities.
 * Media: Made WebP conversion the default value for new installations.
 * Media: When deactivating the Imageshop integration, hide attachment references from the media library to create a better user experience.
