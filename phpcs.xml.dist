@@ -25,7 +25,9 @@
 
     <rule ref="WordPress.WP.I18n">
     	<properties>
-    		<property name="text_domain" type="array" value="imageshop-dam-connector" />
+    		<property name="text_domain" type="array">
+    			<element value="imageshop-dam-connector" />
+    		</property>
 		</properties>
 	</rule>
 
