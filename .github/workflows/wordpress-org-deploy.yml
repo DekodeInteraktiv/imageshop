@@ -1,0 +1,73 @@
+name: Deploy to WordPress.org
+
+on:
+    # Called from the create-release workflow to deploy the plugin code and assets.
+    workflow_call:
+        inputs:
+            deploy_plugin:
+                description: 'Deploy plugin code from the built zip artifact'
+                type: boolean
+                required: true
+            dry_run:
+                description: 'Perform a dry run without committing to WordPress.org SVN'
+                type: boolean
+                default: true
+        secrets:
+            SVN_USERNAME:
+                required: true
+            SVN_PASSWORD:
+                required: true
+
+    # Manually triggered to push readme/asset updates without a full plugin re-release.
+    # Requires only readme.txt or .wordpress-org/ changes to have been committed to the
+    # default branch since the last WordPress.org sync.
+    workflow_dispatch:
+        inputs:
+            dry_run:
+                description: 'Perform a dry run without committing to WordPress.org SVN'
+                type: boolean
+                default: true
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout source
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+            # --- Full plugin deploy (called from create-release) ---
+
+            - name: Download plugin zip artifact
+              if: ${{ inputs.deploy_plugin }}
+              uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+              with:
+                  name: plugin-zip
+                  path: ./plugin-artifact
+
+            - name: Extract plugin zip
+              if: ${{ inputs.deploy_plugin }}
+              run: unzip ./plugin-artifact/imageshop-dam-connector.zip -d ./plugin-build
+
+            - name: Deploy plugin to WordPress.org
+              if: ${{ inputs.deploy_plugin }}
+              uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # 2.3.0
+              with:
+                  dry-run: ${{ inputs.dry_run }}
+              env:
+                  SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+                  SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+                  SLUG: imageshop-dam-connector
+                  BUILD_DIR: ./plugin-build
+                  ASSETS_DIR: .wordpress-org
+
+            # --- Assets/readme-only deploy (manual dispatch) ---
+
+            - name: Deploy assets and readme to WordPress.org
+              if: ${{ !inputs.deploy_plugin && !inputs.dry_run }}
+              uses: 10up/action-wordpress-plugin-asset-update@2480306f6f693672726d08b5917ea114cb2825f7 # 2.2.0
+              env:
+                  SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+                  SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+                  SLUG: imageshop-dam-connector
+                  ASSETS_DIR: .wordpress-org

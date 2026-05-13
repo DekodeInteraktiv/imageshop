@@ -37,6 +37,13 @@ jobs:
             - name: Build plugin zip
               run: npm run plugin-zip
 
+            - name: Upload plugin zip artifact
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: plugin-zip
+                  path: ./imageshop-dam-connector.zip
+                  retention-days: 1
+
             - name: Tag the release
               run: |
                   git config --global user.name "GitHub Actions"
@@ -53,3 +60,11 @@ jobs:
                   draft: false
                   prerelease: false
                   files: ./imageshop-dam-connector.zip
+
+    deploy-wordpress-org:
+        needs: build
+        uses: ./.github/workflows/wordpress-org-deploy.yml
+        with:
+            deploy_plugin: true
+            dry_run: true
+        secrets: inherit
