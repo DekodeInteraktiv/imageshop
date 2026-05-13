@@ -1444,14 +1444,14 @@ class Attachment {
 	/**
 	 * Filter out the `srcset` data for SVG images to prevent unnecessary requests and image manipulations.
 	 *
-	 * @param array $image_meta The image metadata.
-	 * @param array $size_array The size array.
-	 * @param string $image_src  The image source URL.
+	 * @param array|mixed $image_meta The image metadata.
+	 * @param array|mixed $size_array The size array.
+	 * @param string      $image_src  The image source URL.
 	 *
 	 * @return array
 	 */
-	public function disable_srcset_for_svg( array $image_meta, array $size_array, string $image_src ) {
-		if ( strtolower( substr( $image_src, -4 ) ) === '.svg' ) {
+	public function disable_srcset_for_svg( $image_meta, $size_array, string $image_src ) {
+		if ( ! is_array( $image_meta ) || empty( $image_meta ) || strtolower( substr( $image_src, -4 ) ) === '.svg' ) {
 			$image_meta['sizes'] = array();
 		}
 
