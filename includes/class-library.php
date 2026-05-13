@@ -55,7 +55,7 @@ class Library {
 			require_once ABSPATH . 'wp-admin/includes/screen.php';
 		}
 		$screen = get_current_screen();
-		if ( $screen && $screen->id === 'upload' ) {
+		if ( $screen && 'upload' === $screen->id ) {
 			\wp_enqueue_script(
 				'imageshop-media-library-filters',
 				\plugins_url( '/assets/scripts/media-library.js', IMAGESHOP_PLUGIN_BASE_NAME ),
@@ -80,7 +80,7 @@ class Library {
 		\wp_enqueue_style(
 			'media-modal',
 			\plugins_url( '/assets/styles/media-modal.css', IMAGESHOP_PLUGIN_BASE_NAME ),
-			[],
+			array(),
 			\Imageshop\WordPress\Upgrade::get_current_version()
 		);
 
@@ -108,7 +108,7 @@ class Library {
 						'imageshop' => esc_html__( 'Search Imageshop', 'imageshop-dam-connector' ),
 						'wordpress' => esc_html__( 'Search WordPress library', 'imageshop-dam-connector' ),
 					),
-					'mime_type' => array(
+					'mime_type'  => array(
 						'label'     => esc_html__( 'Media type', 'imageshop-dam-connector' ),
 						'all'       => esc_html__( 'All media types', 'imageshop-dam-connector' ),
 						'images'    => esc_html__( 'Images', 'imageshop-dam-connector' ),

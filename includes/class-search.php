@@ -444,7 +444,7 @@ class Search {
 				);
 			}
 		} elseif ( $media_file_type && ! \stristr( $media_file_type, 'image' ) && ( \stristr( $media_file_type, 'video' ) || \stristr( $media_file_type, 'audio' ) ) ) {
-			$full_size_url = $this->attachment->get_permalink_for_size( $media->DocumentID, $media->FileName, 0, 0, false , true ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID`, `$media->FileName`, `$original_media->Width`, and `$oreiginal_media->Height` are provided by the SaaS API.
+			$full_size_url = $this->attachment->get_permalink_for_size( $media->DocumentID, $media->FileName, 0, 0, false, true ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID`, `$media->FileName`, `$original_media->Width`, and `$oreiginal_media->Height` are provided by the SaaS API.
 
 			if ( null !== $full_size_url ) {
 				$full_size_url = $full_size_url['source_url'];
@@ -550,7 +550,7 @@ class Search {
 	private function generate_attachment_meta_fields( $post_id, $media ) {
 		$fields = array();
 
-		$no_date_placeholder = sprintf(
+		$no_date_placeholder    = sprintf(
 			'<em>%s</em>',
 			esc_html__( 'No date set', 'imageshop-dam-connector' )
 		);

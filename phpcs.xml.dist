@@ -36,4 +36,12 @@
     <!-- Exclude the build directory -->
     <exclude-pattern>/build/*</exclude-pattern>
 
+	<!-- Exclude rules that are not relevant to our codebase -->
+	<rule ref="WordPress.Files.FileName">
+		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+		<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+	</rule>
+	<rule ref="Generic.Arrays.DisallowShortArraySyntax">
+		<exclude name="Generic.Arrays.DisallowShortArraySyntax.Found"/>
+	</rule>
 </ruleset>

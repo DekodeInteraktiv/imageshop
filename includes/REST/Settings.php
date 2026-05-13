@@ -95,7 +95,7 @@ class Settings {
 			\update_option( 'imageshop_webp_support', $webp_support );
 
 			// Remove old and potentially invalid meta keys.
-			$wpdb->query( "DELETE FROM `" . $wpdb->postmeta . "` WHERE `meta_key` IN ( '_imageshop_permalinks', '_imageshop_media_sizes' )" );
+			$wpdb->query( 'DELETE FROM `' . $wpdb->postmeta . '` WHERE `meta_key` IN ( \'_imageshop_permalinks\', \'_imageshop_media_sizes\' )' );
 
 			// Flush cache values to ensure no stale data is hanging around.
 			\wp_cache_flush();
@@ -105,11 +105,14 @@ class Settings {
 			\update_option( 'imageshop_upload_to_imageshop', $upload_to_imageshop );
 		}
 
-		return new WP_REST_Response( [
-			'success'  => true,
-			'message'  => __( 'Your settings have been saved.', 'imageshop-dam-connector' ),
-			'settings' => $this->get_settings_api_response(),
-		], 200 );
+		return new WP_REST_Response(
+			[
+				'success'  => true,
+				'message'  => __( 'Your settings have been saved.', 'imageshop-dam-connector' ),
+				'settings' => $this->get_settings_api_response(),
+			],
+			200
+		);
 	}
 
 }
