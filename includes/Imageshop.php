@@ -26,8 +26,8 @@ class Imageshop {
 	 * Class constructor.
 	 */
 	public function __construct() {
-		new Upgrade;
-		new Dashboard;
+		new Upgrade();
+		new Dashboard();
 
 		$this->init();
 		$this->compatibility();
@@ -37,21 +37,21 @@ class Imageshop {
 	 * Initiate all needed classes.
 	 */
 	public function init() {
-		new Helpers;
+		new Helpers();
 
-		new MimeTypes;
+		new MimeTypes();
 		Attachment::get_instance();
-		new Library;
-		new Onboarding;
-		new Search;
-		new Insert;
-		new Sync;
+		new Library();
+		new Onboarding();
+		new Search();
+		new Insert();
+		new Sync();
 
-		new Settings;
+		new Settings();
 	}
 
 	public function compatibility() {
-		new Polylang;
+		new Polylang();
 	}
 
 	public static function available_locales(): array {
@@ -102,5 +102,4 @@ class Imageshop {
 	public static function onboarding_completed(): bool {
 		return ! empty( \get_option( 'imageshop_api_key', false ) );
 	}
-
 }

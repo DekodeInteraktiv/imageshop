@@ -21,9 +21,7 @@ class Media {
 
 	private $force = false;
 
-	public function __construct() {
-
-	}
+	public function __construct() {}
 
 	/**
 	 * Export content from the media library to Imageshop.
@@ -224,7 +222,6 @@ class Media {
 		\WP_CLI::success( 'All attachments have been exported.' );
 		return true;
 	}
-
 }
 
 \WP_CLI::add_command( 'imageshop media', __NAMESPACE__ . '\\Media' );

@@ -294,9 +294,9 @@ class Search {
 	 *
 	 * @return object
 	 */
-	private function imageshop_pseudo_post( $media, $interface = null ) {
-		if ( null === $interface ) {
-			$interface = \get_option( 'imageshop_upload_interface' );
+	private function imageshop_pseudo_post( $media, $imageshop_interface = null ) {
+		if ( null === $imageshop_interface ) {
+			$imageshop_interface = \get_option( 'imageshop_upload_interface' );
 		}
 
 		// A list of thumbnail sizes in prioritized order.
@@ -363,7 +363,7 @@ class Search {
 				'FileExtension' => 'jpg',
 			);
 		} elseif ( $original_media && ( 0 === $original_media->Width || 0 === $original_media->Height ) && count( $media->InterfaceList ) >= 1 ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Width`, `$original_media->Height`, and `$media->InterfaceList` are provided by the SaaS API.
-			$dimensions = $this->attachment->get_original_dimensions( $interface, $original_media );
+			$dimensions = $this->attachment->get_original_dimensions( $imageshop_interface, $original_media );
 
 			$original_media->Width  = $dimensions['width']; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Width` is provided by the SaaS API.
 			$original_media->Height = $dimensions['height']; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Height` is provided by the SaaS API.

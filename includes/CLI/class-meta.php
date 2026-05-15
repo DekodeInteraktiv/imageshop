@@ -20,9 +20,7 @@ class Meta {
 
 	private $delay = 5;
 
-	public function __construct() {
-
-	}
+	public function __construct() {}
 
 	/**
 	 * Update the metadata for an attachment.
@@ -220,7 +218,6 @@ class Meta {
 			}
 		}
 	}
-
 }
 
 \WP_CLI::add_command( 'imageshop meta', __NAMESPACE__ . '\\Meta' );

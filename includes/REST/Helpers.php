@@ -37,7 +37,7 @@ class Helpers {
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'test_connection' ),
-				'permission_callback' => function() {
+				'permission_callback' => function () {
 					return \current_user_can( 'manage_options' );
 				},
 			)
@@ -83,5 +83,4 @@ class Helpers {
 
 		return new \WP_REST_Response( $response );
 	}
-
 }

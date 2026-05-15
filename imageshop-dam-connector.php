@@ -28,18 +28,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Autoloader to ensure our namespace can autoload files seamlessly.
  */
 \spl_autoload_register(
-	function ( $class ) {
+	function ( $invoked_class ) {
 		// Project-specific namespace
 		$prefix   = __NAMESPACE__;
 		$base_dir = __DIR__ . '/includes/';
 
 		// Do not try to autoload anything outside our namespace.
-		if ( substr( $class, 0, \strlen( $prefix ) ) !== $prefix ) {
+		if ( substr( $invoked_class, 0, \strlen( $prefix ) ) !== $prefix ) {
 			return;
 		}
 
 		// Remove the namespace prefix from the classname to get the relative path.
-		$relative_class = \substr( $class, \strlen( $prefix ) );
+		$relative_class = \substr( $invoked_class, \strlen( $prefix ) );
 
 		// Replace namespace separators with directory separators in the relative class name.
 		$relative_class = \str_replace( '\\', '/', $relative_class );
@@ -80,4 +80,4 @@ if ( \class_exists( 'WP_CLI' ) ) {
 	require_once __DIR__ . '/includes/CLI/class-duplicates.php';
 }
 
-new Imageshop;
+new Imageshop();

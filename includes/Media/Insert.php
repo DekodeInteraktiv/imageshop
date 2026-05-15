@@ -63,5 +63,4 @@ class Insert {
 
 		return $response;
 	}
-
 }

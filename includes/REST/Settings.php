@@ -114,5 +114,4 @@ class Settings {
 			200
 		);
 	}
-
 }

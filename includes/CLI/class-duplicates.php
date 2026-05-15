@@ -256,7 +256,7 @@ class Duplicates {
 							$imageshop->delete_document( $document->DocumentID ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$document->DocumentID` is provided by the SaaS API.
 						}
 
-						$deleted++;
+						++$deleted;
 					}
 				}
 
@@ -264,7 +264,7 @@ class Duplicates {
 					$total_pages = ceil( ( isset( $results->NumberOfDocuments ) ? $results->NumberOfDocuments : 0 ) / $per_page ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$results->NumberOfDocuments` is provided by the SaaS API.
 				}
 
-				$page++;
+				++$page;
 
 				if ( $page > $total_pages ) {
 					$has_more_items = false;
@@ -291,7 +291,6 @@ class Duplicates {
 		\WP_CLI::success( sprintf( 'Finished removing duplicates. A total of %d media items were deleted.', $deleted ) );
 		return true;
 	}
-
 }
 
 \WP_CLI::add_command( 'imageshop media duplicates', __NAMESPACE__ . '\\Duplicates' );

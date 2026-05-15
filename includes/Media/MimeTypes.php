@@ -28,5 +28,4 @@ class MimeTypes {
 
 		return array_merge( $wp_get_mime_types, $imageshop_types );
 	}
-
 }

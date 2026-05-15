@@ -137,7 +137,7 @@ class Library {
 		// Overrides code styling to accommodate for a third dropdown filter
 		\add_action(
 			'admin_footer',
-			function() {
+			function () {
 				?>
 				<style>
 					.media-modal-content .media-frame select.attachment-filters {
@@ -199,5 +199,4 @@ class Library {
 	public function force_grid_view() {
 		return 'grid';
 	}
-
 }
