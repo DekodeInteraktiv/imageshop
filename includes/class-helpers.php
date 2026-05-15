@@ -15,26 +15,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Helper class.
  */
 class Helpers {
-	private static $instance;
 
 	/**
 	 * Class constructor.
 	 */
 	public function __construct() {
 		\add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
-	}
-
-	/**
-	 * Return a singleton instance of this class.
-	 *
-	 * @return self
-	 */
-	public static function get_instance() {
-		if ( ! self::$instance ) {
-			self::$instance = new self();
-		}
-
-		return self::$instance;
 	}
 
 	/**

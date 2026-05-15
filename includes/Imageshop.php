@@ -1,0 +1,98 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Imageshop\WordPress;
+
+use Imageshop\WordPress\Admin\Dashboard;
+use Imageshop\WordPress\Attachment;
+use Imageshop\WordPress\Helpers;
+use Imageshop\WordPress\Library;
+use Imageshop\WordPress\Media\MimeTypes;
+use Imageshop\WordPress\Onboarding;
+use Imageshop\WordPress\REST\Settings;
+use Imageshop\WordPress\Search;
+use Imageshop\WordPress\Sync;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	die();
+}
+
+class Imageshop {
+
+	/**
+	 * Class constructor.
+	 */
+	public function __construct() {
+		new Upgrade;
+		new Dashboard;
+
+		$this->init();
+	}
+
+	/**
+	 * Initiate all needed classes.
+	 */
+	public function init() {
+		new Helpers;
+
+		new MimeTypes;
+		Attachment::get_instance();
+		new Library;
+		new Onboarding;
+		new Search;
+		new Sync;
+
+		new Settings;
+	}
+
+	public static function available_locales(): array {
+		return array(
+			'dk' => array(
+				'label'     => esc_html__( 'Danish', 'imageshop-dam-connector' ),
+				'default'   => false,
+				'iso_codes' => array(
+					'da'    => 'string',
+					'dk'    => 'string',
+					'da_DK' => 'string',
+				),
+			),
+			'en' => array(
+				'label'     => esc_html__( 'English', 'imageshop-dam-connector' ),
+				'default'   => false,
+				'iso_codes' => array(
+					'/en_*/' => 'regex',
+				),
+			),
+			'no' => array(
+				'label'     => esc_html__( 'Norwegian', 'imageshop-dam-connector' ),
+				'default'   => true,
+				'iso_codes' => array(
+					'nb'    => 'string',
+					'nn'    => 'string',
+					'nb_NO' => 'string',
+					'nn_NO' => 'string',
+				),
+			),
+			'sv' => array(
+				'label'     => esc_html__( 'Swedish', 'imageshop-dam-connector' ),
+				'default'   => false,
+				'iso_codes' => array(
+					'se'    => 'string',
+					'sv'    => 'string',
+					'sv_SE' => 'string',
+				),
+			),
+		);
+	}
+
+	/**
+	 * Check the onboarding state, and if required settings are in place.
+	 *
+	 * @return bool
+	 */
+	public static function onboarding_completed(): bool {
+		return ! empty( \get_option( 'imageshop_api_key', false ) );
+	}
+
+}

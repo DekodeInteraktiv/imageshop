@@ -15,30 +15,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Class Onboarding
  */
 class Onboarding {
-	private static $instance;
 
 	/**
 	 * Class constructor.
 	 */
 	public function __construct() {
-		if ( ! Imageshop::get_instance()->onboarding_completed() ) {
+		if ( ! Imageshop::onboarding_completed() ) {
 			\add_action( 'admin_notices', array( $this, 'onboarding_notice' ) );
 			\add_action( 'admin_enqueue_scripts', array( $this, 'onboarding_styles' ) );
 			\add_action( 'rest_api_init', array( $this, 'onboarding_rest_endpoints' ) );
 		}
-	}
-
-	/**
-	 * Return a singleton instance of this class.
-	 *
-	 * @return self
-	 */
-	public static function get_instance() {
-		if ( ! self::$instance ) {
-			self::$instance = new self();
-		}
-
-		return self::$instance;
 	}
 
 	/**

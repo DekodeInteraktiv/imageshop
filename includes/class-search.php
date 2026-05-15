@@ -18,7 +18,6 @@ class Search {
 
 	private $imageshop;
 	private $attachment;
-	private static $instance;
 
 	private $search_attributes = array(
 		'Pagesize'      => 25,
@@ -35,7 +34,7 @@ class Search {
 	 * Class constructor.
 	 */
 	public function __construct() {
-		if ( Imageshop::get_instance()->onboarding_completed() ) {
+		if ( Imageshop::onboarding_completed() ) {
 			$this->imageshop  = REST_Controller::get_instance();
 			$this->attachment = Attachment::get_instance();
 
@@ -43,19 +42,6 @@ class Search {
 			//\add_action( 'wp_ajax_upload-attachment', array( $this, 'search_media' ), 0 );
 			\add_filter( 'rest_prepare_attachment', array( $this, 'rest_image_override' ), 10, 2 );
 		}
-	}
-
-	/**
-	 * Return a singleton instance of this class.
-	 *
-	 * @return self
-	 */
-	public static function get_instance() {
-		if ( ! self::$instance ) {
-			self::$instance = new self();
-		}
-
-		return self::$instance;
 	}
 
 	/**

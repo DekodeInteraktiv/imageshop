@@ -15,32 +15,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Class Library
  */
 class Library {
-	private static $instance;
 
 	/**
 	 * Class constructor.
 	 */
 	public function __construct() {
-		if ( Imageshop::get_instance()->onboarding_completed() ) {
+		if ( Imageshop::onboarding_completed() ) {
 			\add_filter( 'get_user_option_media_library_mode', array( $this, 'force_grid_view' ) );
 			\add_action( 'admin_init', array( $this, 'override_list_view_mode_url' ) );
 			\add_action( 'admin_head', array( $this, 'hide_list_view_button' ) );
 
 			\add_action( 'wp_enqueue_media', array( $this, 'add_custom_media_modal_filters' ) );
 		}
-	}
-
-	/**
-	 * Return a singleton instance of this class.
-	 *
-	 * @return self
-	 */
-	public static function get_instance() {
-		if ( ! self::$instance ) {
-			self::$instance = new self();
-		}
-
-		return self::$instance;
 	}
 
 	/**

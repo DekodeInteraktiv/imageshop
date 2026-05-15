@@ -21,6 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
+use Imageshop\WordPress\Admin\Dashboard;
 use Imageshop\WordPress\Upgrade;
 
 \define( 'IMAGESHOP_ABSPATH', __DIR__ );
@@ -62,12 +63,9 @@ if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 	require_once __DIR__ . '/vendor/autoload.php';
 }
 
-require_once __DIR__ . '/includes/upgrade.php';
-
 require_once __DIR__ . '/includes/helpers.php';
 require_once __DIR__ . '/includes/compatibility.php';
 
-require_once __DIR__ . '/includes/class-imageshop.php';
 require_once __DIR__ . '/includes/class-attachment.php';
 require_once __DIR__ . '/includes/class-helpers.php';
 require_once __DIR__ . '/includes/class-library.php';
@@ -165,7 +163,4 @@ if ( \class_exists( 'WP_CLI' ) ) {
 	require_once __DIR__ . '/includes/CLI/class-duplicates.php';
 }
 
-new Upgrade();
-
-$isml = Imageshop::get_instance();
-$isml->start();
+new Imageshop;

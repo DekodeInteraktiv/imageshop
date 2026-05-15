@@ -15,7 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Class Sync
  */
 class Sync {
-	private static $instance;
 
 	const HOOK_IMPORT_WP_TO_IMAGESHOP = 'imageshop_import_wp_to_imageshop';
 	const HOOK_IMPORT_IMAGESHOP_TO_WP = 'imageshop_import_imageshop_to_wp';
@@ -29,14 +28,6 @@ class Sync {
 		\add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
 
 		\add_action( 'admin_notices', array( $this, 'check_import_progress' ) );
-	}
-
-	public static function get_instance() {
-		if ( ! self::$instance ) {
-			self::$instance = new self();
-		}
-
-		return self::$instance;
 	}
 
 	public function register_rest_routes() {

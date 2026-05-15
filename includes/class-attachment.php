@@ -27,7 +27,7 @@ class Attachment {
 	 * Class constructor.
 	 */
 	public function __construct() {
-		if ( Imageshop::get_instance()->onboarding_completed() ) {
+		if ( Imageshop::onboarding_completed() ) {
 			\add_filter( 'wp_get_attachment_image_src', array( $this, 'attachment_image_src' ), 10, 3 );
 			\add_filter( 'wp_get_attachment_url', array( $this, 'attachment_url' ), 10, 2 );
 			\add_action( 'add_attachment', array( $this, 'export_to_imageshop' ), 10, 1 );
