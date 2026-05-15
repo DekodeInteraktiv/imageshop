@@ -17,11 +17,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Attachment {
 	private static $instance;
 
-	private array $documents = array();
+	private $documents = array();
 
-	private bool $iterative_src = false;
+	private $iterative_src = false;
 
-	private string $is_srcset_content_img_tag_disabled = 'no';
+	private $is_srcset_content_img_tag_disabled = 'no';
 
 	/**
 	 * Class constructor.

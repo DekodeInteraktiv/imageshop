@@ -20,7 +20,7 @@ class Search {
 	private $attachment;
 	private static $instance;
 
-	private array $search_attributes = array(
+	private $search_attributes = array(
 		'Pagesize'      => 25,
 		'Querystring'   => null,
 		'SortDirection' => null,
@@ -29,7 +29,7 @@ class Search {
 		'CategoryIds'   => null,
 	);
 
-	private array $consent = array();
+	private $consent = array();
 
 	/**
 	 * Class constructor.

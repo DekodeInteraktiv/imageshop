@@ -42,12 +42,12 @@ class REST_Controller {
 	/**
 	 * @var string
 	 */
-	private string $api_token;
+	private $api_token;
 
 	/**
 	 * @var string
 	 */
-	private string $language = 'en';
+	private $language = 'en';
 
 	/**
 	 * @var array
