@@ -8,6 +8,7 @@ use Imageshop\WordPress\Admin\Dashboard;
 use Imageshop\WordPress\Admin\Onboarding;
 use Imageshop\WordPress\Media\Attachment;
 use Imageshop\WordPress\Compatibility\Polylang;
+use Imageshop\WordPress\Media\Insert;
 use Imageshop\WordPress\REST\Helpers;
 use Imageshop\WordPress\Media\Library;
 use Imageshop\WordPress\Media\MimeTypes;
@@ -43,6 +44,7 @@ class Imageshop {
 		new Library;
 		new Onboarding;
 		new Search;
+		new Insert;
 		new Sync;
 
 		new Settings;
