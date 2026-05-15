@@ -5,11 +5,14 @@
 
 declare(strict_types=1);
 
-namespace Imageshop\WordPress;
+namespace Imageshop\WordPress\Admin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
+
+use Imageshop\WordPress\Imageshop;
+use Imageshop\WordPress\API\REST_Controller;
 
 /**
  * Class Onboarding
@@ -157,7 +160,7 @@ class Onboarding {
 	}
 
 	/**
-	 * Output the onbaording notice to the user.
+	 * Output the onboarding notice to the user.
 	 *
 	 * @return void
 	 */

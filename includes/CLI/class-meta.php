@@ -11,8 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
-use Imageshop\WordPress\Attachment;
-use Imageshop\WordPress\REST_Controller;
+use Imageshop\WordPress\Media\Attachment;
+use Imageshop\WordPress\API\REST_Controller;
 
 class Meta {
 

@@ -55,5 +55,3 @@ class Polylang {
 		return array_merge( $metas, $this->meta_fields_to_copy );
 	}
 }
-
-new Polylang();

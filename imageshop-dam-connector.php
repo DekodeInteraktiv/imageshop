@@ -21,9 +21,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
-use Imageshop\WordPress\Admin\Dashboard;
-use Imageshop\WordPress\Upgrade;
-
 \define( 'IMAGESHOP_ABSPATH', __DIR__ );
 \define( 'IMAGESHOP_PLUGIN_BASE_NAME', __FILE__ );
 
@@ -64,97 +61,17 @@ if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 }
 
 require_once __DIR__ . '/includes/helpers.php';
-require_once __DIR__ . '/includes/compatibility.php';
-
-require_once __DIR__ . '/includes/class-attachment.php';
-require_once __DIR__ . '/includes/class-helpers.php';
-require_once __DIR__ . '/includes/class-library.php';
-require_once __DIR__ . '/includes/class-onboarding.php';
-require_once __DIR__ . '/includes/class-rest-controller.php';
-require_once __DIR__ . '/includes/class-search.php';
-require_once __DIR__ . '/includes/class-sync.php';
-
-function imageshop_incompatibile( $msg ) {
-	require_once ABSPATH . DIRECTORY_SEPARATOR . 'wp-admin' . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'plugin.php';
-	\deactivate_plugins( __FILE__ );
-	\wp_die( \esc_html( $msg ) );
-}
 
 // Validate that the plugin is compatible when being activated.
 \register_activation_hook(
 	__FILE__,
-	function() {
-		global $wpdb;
-
-		if ( \is_admin() && ( ! \defined( 'DOING_AJAX' ) || ! DOING_AJAX ) ) {
-			if ( \version_compare( PHP_VERSION, '7.0', '<' ) ) {
-				imageshop_incompatibile(
-					\sprintf(
-						'The Imageshop Media Library plugin requires PHP version 7.0 or higher. This site uses PHP version %s, which has caused the plugin to be automatically deactivated.',
-						PHP_VERSION
-					)
-				);
-			}
-		}
-
-		$wpdb->query(
-			'UPDATE
-				`' . $wpdb->posts . '` AS p
-			SET
-				p.post_type = "attachment"
-			WHERE
-				p.post_type = "attachment-imageshop"
-			AND (
-			    EXISTS (
-			        SELECT 1
-			        FROM `' . $wpdb->postmeta . '` AS pm
-			        WHERE pm.post_id = p.ID
-			        AND pm.meta_key IN ("_imageshop_permalinks", "_imageshop_media_sizes")
-			    )
-			    OR NOT EXISTS (
-			        SELECT 1
-			        FROM `' . $wpdb->postmeta . '` AS pm2
-			        WHERE pm2.post_id = p.ID
-			        AND pm2.meta_key = "_wp_attached_file"
-			        AND pm2.meta_value IS NOT NULL
-			        AND pm2.meta_value != ""
-			    )
-			)'
-		);
-	}
+	[ 'Imageshop\WordPress\PluginStatus', 'register_activation_hook' ]
 );
 
 // When deactivating the plugin, hide any media that is only tied to Imageshop to give the end users a better experience if they are just testing something.
 \register_deactivation_hook(
 	__FILE__,
-	function() {
-		global $wpdb;
-
-		$wpdb->query(
-			'UPDATE
-				`' . $wpdb->posts . '` AS p
-			SET
-				p.post_type = "attachment-imageshop"
-			WHERE
-				p.post_type = "attachment"
-			AND (
-			    EXISTS (
-			        SELECT 1
-			        FROM `' . $wpdb->postmeta . '` AS pm
-			        WHERE pm.post_id = p.ID
-			        AND pm.meta_key IN ("_imageshop_permalinks", "_imageshop_media_sizes")
-			    )
-			    OR NOT EXISTS (
-			        SELECT 1
-			        FROM `' . $wpdb->postmeta . '` AS pm2
-			        WHERE pm2.post_id = p.ID
-			        AND pm2.meta_key = "_wp_attached_file"
-			        AND pm2.meta_value IS NOT NULL
-			        AND pm2.meta_value != ""
-			    )
-			)'
-		);
-	}
+	[ 'Imageshop\WordPress\PluginStatus', 'register_deactivation_hook' ]
 );
 
 if ( \class_exists( 'WP_CLI' ) ) {

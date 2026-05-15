@@ -5,7 +5,10 @@
 
 declare(strict_types=1);
 
-namespace Imageshop\WordPress;
+namespace Imageshop\WordPress\Media;
+
+use Imageshop\WordPress\Imageshop;
+use Imageshop\WordPress\API\REST_Controller;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	die();

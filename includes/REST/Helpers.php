@@ -5,7 +5,9 @@
 
 declare(strict_types=1);
 
-namespace Imageshop\WordPress;
+namespace Imageshop\WordPress\REST;
+
+use Imageshop\WordPress\API\REST_Controller;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	die();

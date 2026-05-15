@@ -5,7 +5,9 @@
 
 declare( strict_types = 1 );
 
-namespace Imageshop\WordPress;
+namespace Imageshop\WordPress\API;
+
+use Imageshop\WordPress\Imageshop;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	die();
@@ -60,7 +62,7 @@ class REST_Controller {
 	/**
 	 * Class constructor.
 	 *
-	 * @param string $api_token Optional. An Imageshop API token.
+	 * @param string $token Optional. An Imageshop API token.
 	 */
 	public function __construct( $token = null ) {
 		if ( null !== $token ) {

@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
-use Imageshop\WordPress\REST_Controller;
+use Imageshop\WordPress\API\REST_Controller;
 use WP_REST_Request;
 use WP_REST_Response;
 

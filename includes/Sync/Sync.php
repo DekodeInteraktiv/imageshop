@@ -5,7 +5,10 @@
 
 declare(strict_types=1);
 
-namespace Imageshop\WordPress;
+namespace Imageshop\WordPress\Sync;
+
+use Imageshop\WordPress\API\REST_Controller;
+use Imageshop\WordPress\Media\Attachment;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	die();

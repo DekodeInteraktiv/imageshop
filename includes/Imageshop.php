@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace Imageshop\WordPress;
 
 use Imageshop\WordPress\Admin\Dashboard;
-use Imageshop\WordPress\Attachment;
-use Imageshop\WordPress\Helpers;
-use Imageshop\WordPress\Library;
+use Imageshop\WordPress\Admin\Onboarding;
+use Imageshop\WordPress\Media\Attachment;
+use Imageshop\WordPress\Compatibility\Polylang;
+use Imageshop\WordPress\REST\Helpers;
+use Imageshop\WordPress\Media\Library;
 use Imageshop\WordPress\Media\MimeTypes;
-use Imageshop\WordPress\Onboarding;
+use Imageshop\WordPress\Media\Search;
 use Imageshop\WordPress\REST\Settings;
-use Imageshop\WordPress\Search;
-use Imageshop\WordPress\Sync;
+use Imageshop\WordPress\Sync\Sync;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	die();
@@ -28,6 +29,7 @@ class Imageshop {
 		new Dashboard;
 
 		$this->init();
+		$this->compatibility();
 	}
 
 	/**
@@ -44,6 +46,10 @@ class Imageshop {
 		new Sync;
 
 		new Settings;
+	}
+
+	public function compatibility() {
+		new Polylang;
 	}
 
 	public static function available_locales(): array {

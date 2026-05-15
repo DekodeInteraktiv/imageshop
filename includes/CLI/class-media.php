@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
-use Imageshop\WordPress\Attachment;
+use Imageshop\WordPress\Media\Attachment;
 
 class Media {
 
