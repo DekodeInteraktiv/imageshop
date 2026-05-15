@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class REST_Controller {
 	private const IMAGESHOP_API_BASE_URL               = 'https://api.imageshop.no';
-	private const IMAGESHOP_CDN_PREFIX                 = '	https://v.imgi.no';
+	private const IMAGESHOP_CDN_PREFIX                 = 'https://v.imgi.no';
 	private const IMAGESHOP_API_CAN_UPLOAD             = '/Login/CanUpload';
 	private const IMAGESHOP_API_WHOAMI                 = '/Login/WhoAmI';
 	private const IMAGESHOP_API_CREATE_DOCUMENT        = '/Document/CreateDocument';
@@ -75,7 +75,7 @@ class REST_Controller {
 		if ( function_exists( 'get_user_locale' ) ) {
 			\add_action(
 				'init',
-				function() {
+				function () {
 					$this->set_language( \get_locale() );
 				}
 			);
@@ -161,12 +161,12 @@ class REST_Controller {
 				'callback'            => array( $this, 'rest_get_categories' ),
 				'args'                => array(
 					'id' => array(
-						'validate_callback' => function( $param ) {
+						'validate_callback' => function ( $param ) {
 							return \is_numeric( $param ) || 'all' === $param;
 						},
 					),
 				),
-				'permission_callback' => function() {
+				'permission_callback' => function () {
 					return \current_user_can( 'upload_files' );
 				},
 			)
@@ -576,30 +576,30 @@ class REST_Controller {
 	/**
 	 * Get a list of available categories for the given interface and language.
 	 *
-	 * @param int|null $interface The interface to return categories from.
+	 * @param int|null $imageshop_interface The interface to return categories from.
 	 * @param string   $lang      The language to return categories for.
 	 *
 	 * @return array
 	 */
-	public function get_categories( $interface = null, $lang = null ) {
-		if ( null === $interface ) {
-			$interface = \get_option( 'imageshop_upload_interface', '' );
+	public function get_categories( $imageshop_interface = null, $lang = null ) {
+		if ( null === $imageshop_interface ) {
+			$imageshop_interface = \get_option( 'imageshop_upload_interface', '' );
 
-			if ( empty( $interface ) ) {
+			if ( empty( $imageshop_interface ) ) {
 				$interface_list = $this->get_interfaces();
 				// If we still can't get an interface, we need ot abort as it is required.
 				if ( empty( $interface_list ) ) {
 					return array();
 				}
 
-				$interface = $interface_list[0]->Id; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$interface->Id` is defined by the third party SaaS API.
+				$imageshop_interface = $interface_list[0]->Id; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$interface->Id` is defined by the third party SaaS API.
 			}
 		}
 		if ( null === $lang ) {
 			$lang = $this->language;
 		}
 
-		$transient_key = 'imageshop_categories_' . $interface . '_' . $lang;
+		$transient_key = 'imageshop_categories_' . $imageshop_interface . '_' . $lang;
 
 		$categories = \get_transient( $transient_key );
 
@@ -611,7 +611,7 @@ class REST_Controller {
 			$request = $this->execute_request(
 				\add_query_arg(
 					array(
-						'interfacename' => $interface,
+						'interfacename' => $imageshop_interface,
 						'language'      => $lang,
 					),
 					self::IMAGESHOP_API_BASE_URL . self::IMAGESHOP_API_GET_CATEGORIES

@@ -56,7 +56,7 @@ class Attachment {
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'update_attachment_details_in_imageshop' ),
-				'permission_callback' => function() {
+				'permission_callback' => function () {
 					return \current_user_can( 'upload_files' );
 				},
 			)
@@ -68,7 +68,7 @@ class Attachment {
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'flush_local_imageshop_references' ),
-				'permission_callback' => function() {
+				'permission_callback' => function () {
 					return \current_user_can( 'upload_files' );
 				},
 			)
@@ -95,9 +95,6 @@ class Attachment {
 				)
 			);
 		}
-
-		// Delete the stores permalink variations.
-		\delete_post_meta( $request->get_param( 'id' ), '_imageshop_permalinks' );
 
 		// Delete the stored metadata.
 		\delete_post_meta( $request->get_param( 'id' ), '_imageshop_media_sizes' );
@@ -315,7 +312,7 @@ class Attachment {
 		/*
 		 * Large sites with a lot of manual media manipulation may encounter
 		 * performance issues when extracting media information from the post
-		 * content, and as such need a way to opt out of this behaviour.
+		 * content, and as such need a way to opt out of this behavior.
 		 */
 		if ( ! $this->is_valid_attachment_id( $attachment_id ) && 'yes' === $this->is_srcset_content_img_tag_disabled ) {
 			return $filtered_image;
@@ -324,6 +321,7 @@ class Attachment {
 		preg_match( '/<img[^>]+src=["\']([^"\']+)["\']/i', $filtered_image, $src_match );
 		$attachment_image_src_url = isset( $src_match[1] ) ? $src_match[1] : '';
 
+		// SVG images do not need srcset, as they are vectorized and will scale on their own.
 		if ( strtolower( substr( $attachment_image_src_url, -4 ) ) === '.svg' ) {
 			return $filtered_image;
 		}
@@ -497,69 +495,28 @@ class Attachment {
 
 		$size_array = array();
 
-		$media_details = \get_post_meta( $attachment_id, '_imageshop_media_sizes', true );
-		$document_id   = \get_post_meta( $attachment_id, '_imageshop_document_id', true );
-
 		// If this isn't an Imageshop item, break out early.
-		if ( empty( $document_id ) ) {
+		if ( empty( \get_post_meta( $attachment_id, '_imageshop_document_id', true ) ) ) {
 			return array();
 		}
 
-		// If the media details are empty, break out early.
-		if ( empty( $media_details ) || empty( $media_details['sizes'] ) ) {
-			$media_details = $this->generate_imageshop_metadata( get_post( $attachment_id ) );
-
-			if ( empty( $media_details ) || empty( $media_details['sizes'] ) ) {
-				return array();
-			}
-		}
-
-		if ( is_array( $size ) ) {
-			$size_array = $size;
-		} elseif ( isset( $media_details['sizes'][ $size ] ) ) {
-			$size_array = array(
-				$media_details['sizes'][ $size ]['width'],
-				$media_details['sizes'][ $size ]['height'],
-			);
-		} elseif ( isset( $media_details['sizes']['original'] ) ) {
-			// The `original` size is, if it exists, a fallback size so that images can still load.
-			$size_array = array(
-				$media_details['sizes']['original']['width'],
-				$media_details['sizes']['original']['height'],
-			);
-		}
-
 		$max_srcset_image_width = apply_filters( 'max_srcset_image_width', 2048, $size_array );
-		$srcset_meta['widest']  = 0;
 
-		// Bail early if there's no further data to iterate over.
-		if ( ! isset( $media_details['sizes'] ) || empty( $media_details['sizes'] ) ) {
-			return $srcset_meta;
-		}
-
-		foreach ( $media_details['sizes'] as $size => $data ) {
+		foreach ( \wp_get_registered_image_subsizes() as $slug => $data ) {
 			if ( $data['width'] > $max_srcset_image_width ) {
 				continue;
 			}
 
-			if ( empty( $data['source_url'] ) ) {
-				$new_source         = $this->get_permalink_for_size( $document_id, $data['file'], $data['width'], $data['height'], false );
-				$data['source_url'] = $new_source['source_url'];
-			}
+			$size_data = $this->get_image_url_for_size( $attachment_id, $data['width'], $data['height'], $data['crop'] ?? false );
 
-			// If the source URL is still not found, then Imageshop was unable to create the file, and we should skip it.
-			if ( empty( $data['source_url'] ) ) {
+			if ( empty( $size_data['source_url'] ) ) {
 				continue;
 			}
 
-			$srcset_meta['entries'][] = sprintf(
-				'%s %dw',
-				$data['source_url'],
-				$data['width']
-			);
+			$srcset_meta['entries'][] = sprintf( '%s %dw', $size_data['source_url'], $size_data['width'] );
 
-			if ( $data['width'] > $srcset_meta['widest'] ) {
-				$srcset_meta['widest'] = $data['width'];
+			if ( $size_data['width'] > $srcset_meta['widest'] ) {
+				$srcset_meta['widest'] = $size_data['width'];
 			}
 		}
 
@@ -580,26 +537,24 @@ class Attachment {
 	}
 
 	/**
-	 * Create a unique permalink token for this attachment
+	 * Create a unique permalink token base for this attachment.
 	 *
-	 * @param int $attachment_id The WordPress attachment ID for the image.
+	 * Generates a site-scoped identifier that remains stable across requests.
+	 * Stored in post meta so the same token is always reused for this attachment.
+	 *
+	 * @param int $attachment_id WordPress attachment ID.
 	 *
 	 * @return string
 	 */
-	public function get_attachment_permalink_token_base( $attachment_id ) {
+	private function get_attachment_permalink_token_base( $attachment_id ) {
 		$token = \get_post_meta( $attachment_id, '_imageshop_permalink_token', true );
 
 		if ( empty( $token ) ) {
 			$domain = \get_site_url();
 
-			// Strip off domain prefixes.
 			$domain = str_ireplace( array( 'http://', 'https://', 'www.' ), '', $domain );
-
-			// Remove TLD, we only care about the domain name.
 			$domain = explode( '.', $domain, 2 );
 			$domain = $domain[0];
-
-			// In the case of internal links (or testing), strip port numbers as well.
 			$domain = explode( ':', $domain, 2 );
 			$domain = $domain[0];
 
@@ -620,6 +575,63 @@ class Attachment {
 		}
 
 		return $token;
+	}
+
+	/**
+	 * Retrieve and cache the base CDN URL for the original image of an attachment.
+	 *
+	 * The base URL is the registered original-size permalink: https://v.imgi.no/{token}-{W}x{H}.
+	 * On-demand sized variants are built by appending __w= / _h= parameters to this base.
+	 * The registration only happens once per attachment; existing registered URLs from the
+	 * legacy _imageshop_permalinks cache are reused to avoid duplicate registrations.
+	 *
+	 * @param int   $attachment_id WordPress attachment ID.
+	 * @param mixed $document_id   Imageshop document ID.
+	 *
+	 * @return string|null Base CDN URL (e.g. https://v.imgi.no/{token}-3000x2000), or null on failure.
+	 */
+	private function get_original_permalink_for_attachment( $attachment_id, $document_id ) {
+		$cached     = \get_post_meta( $attachment_id, '_imageshop_original_permalink', true );
+		$token_base = $this->get_attachment_permalink_token_base( $attachment_id );
+
+		// Validate any cached value actually contains our token (guards against stale data such
+		// as the internal-only /download URL that was previously stored here).
+		if ( ! empty( $cached ) && ! empty( $token_base ) && false !== strpos( $cached, $token_base ) ) {
+			return $cached;
+		}
+
+		$media = $this->get_document( $document_id );
+		if ( empty( $media ) || ! isset( $media->SubDocumentList ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->SubDocumentList` is provided by the SaaS API.
+			return null;
+		}
+
+		$original_image = self::get_document_original_file( $media );
+		if ( empty( $original_image ) ) {
+			return null;
+		}
+
+		if ( 0 === $original_image->Width || 0 === $original_image->Height ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are provided by the SaaS API.
+			$dimensions             = $this->get_original_dimensions( $media->InterfaceList, $original_image ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->InterfaceList` is provided by the SaaS API.
+			$original_image->Width  = $dimensions['width']; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+			$original_image->Height = $dimensions['height']; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+		}
+
+		// Register the original at its full dimensions.
+		// The resulting CDN URL (https://v.imgi.no/{token}-{W}x{H}) becomes the base for
+		// all on-demand sized variants via __w= / _h= URL parameters.
+		$imageshop = REST_Controller::get_instance();
+		$base_url  = \untrailingslashit(
+			$imageshop->create_permalinks_url(
+				$document_id,
+				$original_image->Width, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is provided by the SaaS API.
+				$original_image->Height, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is provided by the SaaS API.
+				$token_base
+			)
+		);
+
+		\update_post_meta( $attachment_id, '_imageshop_original_permalink', $base_url );
+
+		return $base_url;
 	}
 
 	/**
@@ -795,11 +807,11 @@ class Attachment {
 			return false;
 		}
 
-		// If, for whatever reason, the original image is missing, get a permalink for the original as a fallback.
+		// If, for whatever reason, the original image is missing, get a URL for the original as a fallback.
 		if ( empty( $data['source_url'] ) || ! pathinfo( $data['source_url'], PATHINFO_EXTENSION ) ) {
-			$new_source = $this->get_permalink_for_size( $document_id, $media_details['sizes']['original']['file'], $media_details['sizes']['original']['width'], $media_details['sizes']['original']['height'], false );
+			$new_source = $this->get_image_url_for_size( $attachment_id, $media_details['sizes']['original']['width'], $media_details['sizes']['original']['height'], false );
 
-			// If the returned permalink is empty, return the original image.
+			// If the returned URL is empty, return the original image.
 			if ( empty( $new_source ) ) {
 				return $image;
 			}
@@ -905,13 +917,13 @@ class Attachment {
 		return $metadata;
 	}
 
-	public function get_original_dimensions( $interface, $original_image ) {
-		if ( ! is_array( $interface ) ) {
-			$interface = (array) $interface;
+	public function get_original_dimensions( $imageshop_interface, $original_image ) {
+		if ( ! is_array( $imageshop_interface ) ) {
+			$imageshop_interface = (array) $imageshop_interface;
 		}
 		$rest = REST_Controller::get_instance();
 
-		$url = $rest->get_document_link( $interface[0]->InterfaceName, $original_image->SubDocumentPath ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$interface[0]->InterfaceName` and `$original_image->SubDocumentPath` are provided by the SaaS API.
+		$url = $rest->get_document_link( $imageshop_interface[0]->InterfaceName, $original_image->SubDocumentPath ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$interface[0]->InterfaceName` and `$original_image->SubDocumentPath` are provided by the SaaS API.
 
 		if ( ! $url ) {
 			return array(
@@ -979,38 +991,21 @@ class Attachment {
 		}
 
 		foreach ( $image_sizes as $slug => $size ) {
-			$image_width  = $size['width'];
-			$image_height = $size['height'];
+			$size_data = $this->get_image_url_for_size( $post->ID, $size['width'], $size['height'], $size['crop'] );
 
-			// If no original image to calculate crops of exist, skip this size.
-			if ( empty( $original_image ) && ( 0 === $image_width || 0 === $image_height ) ) {
+			if ( empty( $size_data ) ) {
 				continue;
 			}
 
-			$size = $this->get_permalink_for_size( $media->DocumentID, $post->post_title, $image_width, $image_height, $size['crop'] ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentId` is provided by the SaaS API.
-
-			// If criteria do not allow for this size, skip it.
-			if ( empty( $size ) ) {
-				continue;
-			}
-
-			$media_details['sizes'][ $slug ] = $size;
+			$media_details['sizes'][ $slug ] = $size_data;
 		}
 
-		if ( ! isset( $media_details['size']['original'] ) ) {
-			$url = $this->preloaded_url(
-				$media, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` is defined by the SaaS API.
-				$original_image,
-				$original_image->Width, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is defined by the SaaS API.
-				$original_image->Height // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is defined by the SaaS API.
-			);
+		if ( ! isset( $media_details['sizes']['original'] ) && $original_image ) {
+			$original_size = $this->get_image_url_for_size( $post->ID, $original_image->Width, $original_image->Height, false ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are provided by the SaaS API.
 
-			$media_details['sizes']['original'] = array(
-				'height'     => $original_image->Height, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is defined by the SaaS API.
-				'width'      => $original_image->Width, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is defined by the SaaS API.
-				'file'       => $post->post_title,
-				'source_url' => $url,
-			);
+			if ( ! empty( $original_size ) ) {
+				$media_details['sizes']['original'] = $original_size;
+			}
 		}
 
 		if ( ! isset( $media_details['sizes']['full'] ) ) {
@@ -1048,105 +1043,6 @@ class Attachment {
 		);
 	}
 
-	public function save_local_permalink_for_size( $document_id, $size_key, $filename, $url, $width, $height, $crop = false ) {
-		$attachment = get_posts(
-			array(
-				'post_type'   => 'attachment',
-				'post_status' => 'inherit',
-				'meta_key'    => '_imageshop_document_id',
-				'meta_value'  => $document_id,
-				'numberposts' => 1,
-			)
-		);
-
-		if ( ! $attachment ) {
-			return null;
-		}
-
-		if ( is_array( $attachment ) ) {
-			$attachment = $attachment[0];
-		}
-
-		$image_sizes = get_post_meta( $attachment->ID, '_imageshop_permalinks', true );
-
-		if ( empty( $image_sizes ) ) {
-			$image_sizes = array();
-		}
-		if ( ! is_array( $image_sizes ) ) {
-			$image_sizes = (array) $image_sizes;
-		}
-
-		$image_sizes[ $size_key ] = array(
-			'height'     => $height,
-			'width'      => $width,
-			'source_url' => $url,
-			'file'       => $filename,
-		);
-
-		update_post_meta( $attachment->ID, '_imageshop_permalinks', $image_sizes );
-	}
-
-	public function get_local_permalink_for_size( $document_id, $filename, $width, $height, $crop = false ) {
-		$attachment = get_posts(
-			array(
-				'post_type'   => 'attachment',
-				'post_status' => 'inherit',
-				'meta_key'    => '_imageshop_document_id',
-				'meta_value'  => $document_id,
-				'numberposts' => 1,
-			)
-		);
-
-		if ( ! $attachment ) {
-			return null;
-		}
-
-		if ( is_array( $attachment ) ) {
-			$attachment = $attachment[0];
-		}
-
-		$size_key = $this->get_permalink_size_key( $filename, $width, $height, $crop );
-
-		$image_sizes = get_post_meta( $attachment->ID, '_imageshop_permalinks', true );
-
-		if ( ! isset( $image_sizes[ $size_key ] ) ) {
-			return null;
-		}
-
-		// If the last section is a filename, or there is no filename, we strip this off, and run the filename converter.
-		// By doing this in both cases means we can have future file formats supported on cached entries as well.
-		$key_url          = $image_sizes[ $size_key ]['source_url'] ?? '';
-		$key_url_parts    = explode( '/', $key_url );
-		$filename_section = end( $key_url_parts );
-		if ( empty( $filename_section ) || substr_count( $filename_section, '.' ) !== 1 ) {
-			$filename = $this->get_attachment_filename( $attachment->ID, $filename );
-
-			// We remove the final entry from the array, as this is the filename, or an empty segment.
-			array_pop( $key_url_parts );
-
-			// We then append the new filename to the array before joining them together again.
-			$key_url_parts[] = $filename;
-		}
-
-		// Rejoin the URL parts together.
-		$image_sizes[ $size_key ]['source_url'] = implode( '/', $key_url_parts );
-
-		return $image_sizes[ $size_key ];
-	}
-
-	public function get_permalink_size_key( $filename, $width, $height, $crop ) {
-		return sprintf(
-			'%s-%s',
-			$filename,
-			sprintf(
-				'%s-%s-%s',
-				$width,
-				$height,
-				$crop ? '1' : '0'
-			)
-		);
-	}
-
 	public function get_document( $document_id ) {
 		if ( ! isset( $this->documents[ $document_id ] ) ) {
 			$imageshop = REST_Controller::get_instance();
@@ -1161,7 +1057,7 @@ class Attachment {
 		$this->documents[ $document_id ] = $document_details;
 	}
 
-	public static function get_document_original_file( $media, $default = array() ) {
+	public static function get_document_original_file( $media, $fallback = array() ) {
 		$original_image     = array();
 		$original_fallbacks = array();
 
@@ -1177,7 +1073,7 @@ class Attachment {
 			}
 		}
 
-		$original = ( $original_image ? $original_image : ( $original_fallbacks ? $original_fallbacks[0] : $default ) );
+		$original = ( $original_image ? $original_image : ( $original_fallbacks ? $original_fallbacks[0] : $fallback ) );
 
 		// We need to do some special handling for vector images, as they may not have proper dimensions for the original file.
 		if ( 'VECTOR' === $media->DocumentType ) {// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentType` is defined by the SaaS API.
@@ -1228,132 +1124,165 @@ class Attachment {
 		return $caption;
 	}
 
-	public function get_permalink_for_size( $document_id, $filename, $width, $height, $crop = false, $is_not_image_media = false ) {
-		// If dimensions are both 0, this image would never be visible, so skip the size.
-		if ( 0 === (int) $height && 0 === (int) $width && ! $is_not_image_media ) {
+	/**
+	 * Resolve CDN URL parameters and computed output dimensions for a requested image size.
+	 *
+	 * Maps WordPress image size settings to Imageshop CDN crop modes:
+	 * - height=0 (width-only)  → FITWIDTH  — maintains width, derives height from aspect ratio
+	 * - width=0  (height-only) → FITHEIGHT — maintains height, derives width from aspect ratio
+	 * - crop=true              → ZOOM      — exact W×H, centre-crops as needed
+	 * - crop=false             → NOPAD     — entire image within max bounds, no padding
+	 *
+	 * @param int $width           Requested width (0 = derive from height).
+	 * @param int $height          Requested height (0 = derive from width).
+	 * @param bool $crop           Whether hard-crop is requested.
+	 * @param int $original_width  Width of the source image.
+	 * @param int $original_height Height of the source image.
+	 *
+	 * @return array|null Array with keys query (CDN param string), width, height — or null if invalid.
+	 */
+	private function build_image_size_params( $width, $height, $crop, $original_width, $original_height ) {
+		if ( 0 === $original_width || 0 === $original_height ) {
 			return null;
 		}
 
-		// Check for a local copy of the permalink first.
-		$local_sizes = $this->get_local_permalink_for_size( $document_id, $filename, $width, $height, $crop );
-		if ( null !== $local_sizes ) {
-			return $local_sizes;
+		$orig_ratio = $original_width / $original_height;
+
+		if ( 0 === $height ) {
+			// Width-only: FITWIDTH maintains the requested width and derives height from aspect ratio.
+			$width  = min( $width, $original_width );
+			$height = (int) round( $width / $orig_ratio );
+			$query  = sprintf( 'w=%d_cropmode=FITWIDTH', $width );
+
+		} elseif ( 0 === $width ) {
+			// Height-only: FITHEIGHT maintains the requested height and derives width from aspect ratio.
+			$height = min( $height, $original_height );
+			$width  = (int) round( $height * $orig_ratio );
+			$query  = sprintf( 'h=%d_cropmode=FITHEIGHT', $height );
+
+		} elseif ( $crop ) {
+			// Hard crop: ZOOM returns exactly W×H, cropping from the centre as needed.
+			$width  = min( $width, $original_width );
+			$height = min( $height, $original_height );
+			if ( 0 === $width || 0 === $height ) {
+				return null;
+			}
+			$query = sprintf( 'w=%d_h=%d_cropmode=ZOOM', $width, $height );
+
+		} else {
+			// Soft crop: NOPAD fits the entire image within the requested bounds without padding.
+			// Compute the actual output dimensions that NOPAD will produce (binding-side logic).
+			$width  = min( $width, $original_width );
+			$height = min( $height, $original_height );
+			if ( 0 === $width || 0 === $height ) {
+				return null;
+			}
+			$req_ratio = $width / $height;
+			if ( $req_ratio < $orig_ratio ) {
+				// Original is wider relative to the box → width is the binding constraint.
+				$height = (int) round( $width / $orig_ratio );
+			} else {
+				// Original is taller relative to the box → height is the binding constraint.
+				$width = (int) round( $height * $orig_ratio );
+			}
+			$query = sprintf( 'w=%d_h=%d_cropmode=NOPAD', $width, $height );
 		}
 
-		$size_key = $this->get_permalink_size_key( $filename, $width, $height, $crop );
+		return array(
+			'query'  => $query,
+			'width'  => $width,
+			'height' => $height,
+		);
+	}
+
+	/**
+	 * Generate an on-demand CDN URL for a specific image size.
+	 *
+	 * Retrieves the original image permalink once (caching it in post meta) and appends
+	 * CDN size/crop parameters for cloud-based on-demand resizing.
+	 *
+	 * @param int  $attachment_id WordPress attachment ID.
+	 * @param int  $width         Requested width in pixels (0 = derive from height).
+	 * @param int  $height        Requested height in pixels (0 = derive from width).
+	 * @param bool $crop          Whether the image should be hard-cropped to exact dimensions.
+	 *
+	 * @return array|null Array with keys source_url, width, height, file — or null if unable to generate.
+	 */
+	public function get_image_url_for_size( $attachment_id, $width, $height, $crop = false ) {
+		if ( 0 === (int) $width && 0 === (int) $height ) {
+			return null;
+		}
+
+		$document_id = \get_post_meta( $attachment_id, '_imageshop_document_id', true );
+		if ( empty( $document_id ) ) {
+			return null;
+		}
 
 		$media = $this->get_document( $document_id );
-
-		$original_image = self::get_document_original_file( $media );
-
-		// If no original image to calculate crops of exist, skip this size.
-		if ( empty( $original_image ) && ( 0 === $width || 0 === $height ) ) {
+		if ( empty( $media ) || ! isset( $media->SubDocumentList ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->SubDocumentList` is provided by the SaaS API.
 			return null;
 		}
 
-		if ( $original_image && ( 0 === $original_image->Width || 0 === $original_image->Height ) && ! $is_not_image_media ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are provided by the SaaS API.
-			$dimensions = $this->get_original_dimensions( $media->InterfaceList, $original_image ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->InterfaceList` is provided by the SaaS API.
+		$original_image = self::get_document_original_file( $media );
+		if ( empty( $original_image ) ) {
+			return null;
+		}
 
+		if ( 0 === $original_image->Width || 0 === $original_image->Height ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are provided by the SaaS API.
+			$dimensions             = $this->get_original_dimensions( $media->InterfaceList, $original_image ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->InterfaceList` is provided by the SaaS API.
 			$original_image->Width  = $dimensions['width']; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is provided by the SaaS API.
 			$original_image->Height = $dimensions['height']; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is provided by the SaaS API.
 		}
 
-		// No sizes should ever exceed the original image sizes, make it so.
-		if ( $width > $original_image->Width && ! $is_not_image_media ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is defined by the SaaS API.
-			$width = $original_image->Width; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is defined by the SaaS API.
-		}
-		if ( $height > $original_image->Height && ! $is_not_image_media ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is defined by the SaaS API.
-			$height = $original_image->Height; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is defined by the SaaS API.
-		}
-
-		/*
-		 * There us no obvious reason why this check should  ever be needed, yet here we are.
-		 *
-		 * For whatever reason, there are scenarios where an image size is reporting both with, and without
-		 * any sensible sizes, leading to division by zero errors in both directions.
-		 *
-		 * This check will catch such a scenario, and return a `null` value, as if an original is missing,
-		 * this is done so as not to break any behavior elsewhere, but this is bad mojo all around.
-		 */
-		if ( 0 === $width && 0 === $height && ! $is_not_image_media ) {
+		$size_params = $this->build_image_size_params(
+			(int) $width,
+			(int) $height,
+			(bool) $crop,
+			$original_image->Width, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is provided by the SaaS API.
+			$original_image->Height // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is provided by the SaaS API.
+		);
+		if ( null === $size_params ) {
 			return null;
 		}
 
-		if ( ( 0 === $width || 0 === $height ) && ! $is_not_image_media ) {
-			if ( 0 === $width ) {
-				$width = (int) \floor( ( $height / $original_image->Height ) * $original_image->Width ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are defined by the SaaS API.
-			}
-			if ( 0 === $height ) {
-				$height = (int) \floor( ( $width / $original_image->Width ) * $original_image->Height ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are defined by the SaaS API.
-			}
-		} elseif ( ( $original_image->Width > $width || $original_image->Height > $height ) && ! $is_not_image_media ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are defined by the SaaS API.
-			// Calculate the aspect ratios for use in getting the appropriate dimension height/width wise for this image.
-			$original_ratio = ( $original_image->Width / $original_image->Height ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are defined by the SaaS API.
-			$image_ratio    = ( $width / $height );
-
-			if ( $image_ratio > $original_ratio ) {
-				$width = round( $height * $original_ratio );
-			} else {
-				$height = round( $width / $original_ratio );
-			}
+		$base_url = $this->get_original_permalink_for_attachment( $attachment_id, $document_id );
+		if ( empty( $base_url ) ) {
+			return null;
 		}
 
-		if ( $crop ) {
-			if ( $width > $original_image->Width ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is defined by the SaaS API.
-				$width = $original_image->Width; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is defined by the SaaS API.
-			}
-		}
-
-		$url = $this->preloaded_url(
-			$media,
-			$original_image,
-			$width,
-			$height
-		);
-
-		$this->save_local_permalink_for_size( $media->DocumentID, $size_key, $filename, $url, $width, $height, $crop ); // / phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `media->DocumentID` are provided by the SaaS API.
+		$filename = $this->get_attachment_filename( $attachment_id, $media->FileName ?? null ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FileName` is provided by the SaaS API.
 
 		return array(
-			'height'     => $height,
-			'width'      => $width,
-			'source_url' => $url,
+			'source_url' => sprintf( '%s__%s/%s', $base_url, $size_params['query'], $filename ),
+			'width'      => $size_params['width'],
+			'height'     => $size_params['height'],
 			'file'       => $filename,
 		);
 	}
 
-	public function preloaded_url( $media, $original_image, $width, $height ) {
-		$imageshop = REST_Controller::get_instance();
-		$media_id  = ( is_object( $media ) ? $media->DocumentID : $media ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` is defined by the SaaS API.
-
-		$attachment = \get_posts(
+	/**
+	 * @deprecated Use get_image_url_for_size() instead.
+	 *
+	 * Kept for backward compatibility with external callers. Delegates to get_image_url_for_size()
+	 * by resolving the attachment ID from the given document ID.
+	 */
+	public function get_permalink_for_size( $document_id, $filename, $width, $height, $crop = false, $is_not_image_media = false ) {
+		$attachments = \get_posts(
 			array(
 				'post_type'      => 'attachment',
 				'post_status'    => 'inherit',
 				'meta_key'       => '_imageshop_document_id',
-				'meta_value'     => $media_id,
+				'meta_value'     => $document_id,
 				'posts_per_page' => 1,
+				'fields'         => 'ids',
 			)
 		);
 
-		if ( is_array( $attachment ) ) {
-			$attachment = reset( $attachment );
+		if ( empty( $attachments ) ) {
+			return null;
 		}
 
-		$file_type = \wp_check_filetype( ( is_object( $media ) && ! empty( $media->FileName ) ? $media->FileName : $attachment->post_title ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FileName` is provided by the SaaS API.
-
-		if ( ! empty( $file_type['type'] ) && is_string( $file_type['type'] ) && stristr( $file_type['type'], 'image/' ) !== false && stristr( $file_type['type'], 'svg+xml' ) === false ) {
-			$url_base = \untrailingslashit( $imageshop->create_permalinks_url( $media_id, $width, $height, $this->get_attachment_permalink_token_base( $attachment->ID ) ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` is defined by the SaaS API.
-		} else {
-			$url_base = \untrailingslashit( $imageshop->create_subdocument_permalinks_url( $media_id, $original_image->SubDocumentID, $this->get_attachment_permalink_token_base( $attachment->ID ) ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` is defined by the SaaS API.
-		}
-
-		return trim(
-			sprintf(
-				'%s/%s',
-				$url_base,
-				urlencode( $this->get_attachment_filename( $attachment->ID, ( is_object( $media ) && ! empty( $media->FileName ) ? $media->FileName : $attachment->post_title ) ) ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FileName` is provided by the SaaS API.
-			)
-		);
+		return $this->get_image_url_for_size( (int) reset( $attachments ), $width, $height, $crop );
 	}
 
 	private function get_attachment_filename( $attach_id, $filename = null ) {
@@ -1412,7 +1341,6 @@ class Attachment {
 		}
 
 		return $html;
-
 	}
 
 	/**
