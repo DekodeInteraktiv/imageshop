@@ -29,7 +29,7 @@ class REST_Controller {
 	private const IMAGESHOP_API_GET_ORIGINAL_PERMALINK = '/Permalink/CreatePermalinkFromOriginal';
 	private const IMAGESHOP_API_GET_INTERFACE          = '/Interface/GetInterfaces';
 	private const IMAGESHOP_API_GET_SEARCH             = '/Search2';
-	private const IMAGESHOP_API_GET_CATEGORIES         = '/Category/GetCategoriesTree';
+	private const IMAGESHOP_API_GET_CATEGORIES         = '/Category/GetCategoriesTreeGroups';
 	private const IMAGESHOP_API_GET_DOCUMENT_LINK      = '/Document/GetDocumentLink';
 	private const IMAGESHOP_API_DELETE_DOCUMENT        = '/Document/DeleteDocument';
 	private const IMAGESHOP_API_GET_PERMALINK_URL      = '/Permalink/CreatePermaLinks';
@@ -155,7 +155,7 @@ class REST_Controller {
 	public function register_routes() {
 		\register_rest_route(
 			'imageshop/v1',
-			'/categories/(?P<id>\d+)',
+			'/categories/(?P<id>(?:\\d+|all))',
 			array(
 				'methods'             => \WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'rest_get_categories' ),
@@ -182,6 +182,9 @@ class REST_Controller {
 	 */
 	public function rest_get_categories( \WP_REST_Request $request ) {
 		$interface = $request->get_param( 'id' );
+		if ( 'all' === $interface ) {
+			$interface = 0;
+		}
 
 		$categories = $this->get_categories( $interface );
 
@@ -625,7 +628,7 @@ class REST_Controller {
 			\set_transient( $transient_key, $categories, HOUR_IN_SECONDS );
 		}
 
-		return $categories->Root->Children; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$categories->Root->Children` is provided by the SaaS API.
+		return $categories;
 	}
 
 	/**

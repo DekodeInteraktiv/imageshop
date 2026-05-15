@@ -142,21 +142,21 @@
 				ImageshopMediaLibrary.categories.map( ( category ) => {
 					incremental++;
 					filters[ incremental ] = {
-						text: category.CategoryName,
+						text: category.name,
 						props: {
 							// Change this: key needs to be the WP_Query var for the taxonomy
-							imageshop_category: category.CategoryID,
+							imageshop_category: category.id,
 						}
 					};
 
-					if ( category.Children ) {
-						category.Children.map( ( child ) => {
+					if ( category.categoryroots ) {
+						category.categoryroots.forEach( ( child ) => {
 							incremental++;
 							filters[ incremental ] = {
-								text: ' - ' + child.CategoryName,
+								text: ' - ' + child.Root.CategoryName,
 								props: {
 									// Change this: key needs to be the WP_Query var for the taxonomy
-									imageshop_category: child.CategoryID,
+									imageshop_category: child.Root.CategoryID,
 								}
 							};
 						} );
@@ -263,9 +263,9 @@
 
 			setSelectors()
 
-			const getImageshopCategories = () => {
+			const getImageshopCategories = ( interfaceId ) => {
 				wp.apiFetch( {
-					path: '/imageshop/v1/categories/' + ImageshopInterfaceDOM.value,
+					path: '/imageshop/v1/categories/' + interfaceId,
 					method: 'GET'
 				} ).then( ( response ) => {
 					ImageshopMediaLibrary.categories = response;
@@ -278,8 +278,17 @@
 				} );
 			}
 
+			const attachInterfaceChangeHandler = () => {
+				ImageshopInterfaceDOM.addEventListener( 'change', () => {
+					this.collection.props.set( { imageshop_category: '' } );
+					getImageshopCategories( ImageshopInterfaceDOM.value );
+				} );
+			}
+
 			if ( ImageshopInterfaceDOM && ImageshopCategoryDOM ) {
 				ImageshopInterfaceDOM.value = ImageshopMediaLibrary.default_interface;
+				attachInterfaceChangeHandler();
+				getImageshopCategories( ImageshopMediaLibrary.default_interface );
 				ImageshopSelectPostsPerPageDOM.dispatchEvent( new Event( 'change' ) );
 			} else {
 				ImageshopSelectorTimer = setInterval( () => {
@@ -289,6 +298,8 @@
 						clearInterval( ImageshopSelectorTimer );
 
 						ImageshopInterfaceDOM.value = ImageshopMediaLibrary.default_interface;
+						attachInterfaceChangeHandler();
+						getImageshopCategories( ImageshopMediaLibrary.default_interface );
 
 						ImageshopSelectPostsPerPageDOM.dispatchEvent( new Event( 'change' ) );
 					}

@@ -73,6 +73,8 @@ class Library {
 			\Imageshop\WordPress\Upgrade::get_current_version()
 		);
 
+		$default_interface = (int) \get_option( 'imageshop_upload_interface' );
+
 		\wp_localize_script(
 			'imageshop-media-library-modal-filters',
 			'ImageshopMediaLibrary',
@@ -88,7 +90,7 @@ class Library {
 					),
 				),
 				'interfaces'        => $imageshop->get_interfaces(),
-				'default_interface' => (int) \get_option( 'imageshop_upload_interface' ),
+				'default_interface' => $default_interface,
 				'categories'        => $imageshop->get_categories(),
 				'languages'         => Imageshop::available_locales(),
 				'labels'            => array(
