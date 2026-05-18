@@ -160,13 +160,18 @@ class Library {
 		?>
 		<style>
 			.wp-admin #imageshop-posts-per-page,
+			.wp-admin label[for="imageshop-posts-per-page"],
 			.wp-admin.upload-php #media-attachment-filters,
 			.wp-admin.upload-php #media-attachment-date-filters,
+			.wp-admin.upload-php label[for="media-attachment-filters"],
+			.wp-admin.upload-php label[for="media-attachment-date-filters"],
 			.wp-admin.post-php #media-attachment-filters,
 			.wp-admin.post-php #media-attachment-date-filters,
+			.wp-admin.post-php label[for="media-attachment-filters"],
+			.wp-admin.post-php label[for="media-attachment-date-filters"],
 			.wp-admin.upload-php .view-switch .view-list,
-			.wp-admin.upload-php .select-mode-toggle-button{
-				display: none!important;
+			.wp-admin.upload-php .select-mode-toggle-button {
+				display: none !important;
 			}
 
 			body.block-editor-page .media-frame select.attachment-filters:last-of-type {
