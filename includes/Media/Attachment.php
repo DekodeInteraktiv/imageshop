@@ -396,10 +396,6 @@ class Attachment {
 			return $filtered_image;
 		}
 
-		if ( ! empty( $dimensions ) && $srcset_meta['widest'] > $dimensions['width'] ) {
-			$srcset_meta['widest'] = $dimensions['width'];
-		}
-
 		if ( ! stristr( $filtered_image, 'srcset=' ) ) {
 			$filtered_image = str_replace(
 				'src=',
@@ -411,18 +407,60 @@ class Attachment {
 			);
 		}
 
-		if ( ! stristr( $filtered_image, 'sizes=' ) ) {
-			$filtered_image = str_replace(
-				'src=',
-				sprintf(
-					'sizes="%s" src=',
-					sprintf(
-						'(max-width: %1$dpx) 100vw, %1$dpx',
-						$srcset_meta['widest']
-					)
-				),
-				$filtered_image
-			);
+		// Determine display dimensions for the sizes attribute.
+		// Virtual attachments have no _wp_attachment_metadata, so WP cannot add width/height attrs.
+		// Parse from the CDN src URL (__w=N_h=M) as the most reliable source for our attachments,
+		// then fall back to <img> width/height attrs (standard WP), then registered size slug.
+		preg_match( '/__w=(\d+)(?:_h=(\d+))?/', $attachment_image_src_url, $cdn_dims );
+		if ( ! empty( $cdn_dims[1] ) ) {
+			$display_size = array( (int) $cdn_dims[1], ! empty( $cdn_dims[2] ) ? (int) $cdn_dims[2] : 0 );
+		} else {
+			preg_match( '/\bwidth=["\'](\d+)["\']/i', $filtered_image, $w_match );
+			preg_match( '/\bheight=["\'](\d+)["\']/i', $filtered_image, $h_match );
+			if ( ! empty( $w_match[1] ) ) {
+				$display_size = array( (int) $w_match[1], ! empty( $h_match[1] ) ? (int) $h_match[1] : 0 );
+			} else {
+				$registered   = Attachment::get_wp_image_sizes();
+				$display_size = isset( $registered[ $size_slug ] )
+					? array( $registered[ $size_slug ]['width'], $registered[ $size_slug ]['height'] )
+					: array( $srcset_meta['widest'], 0 );
+			}
+		}
+
+		// Resolve the content column cap.
+		// Priority: $content_width (classic themes / page builders) > theme.json contentSize (block themes) > max_srcset_image_width (fallback).
+		// Used below only when no theme filter on wp_calculate_image_sizes customised the result.
+		global $content_width;
+		$max_display_width = (int) $content_width;
+		if ( 0 === $max_display_width && function_exists( 'wp_get_global_settings' ) ) {
+			$global_layout     = \wp_get_global_settings( array( 'layout' ) );
+			$max_display_width = isset( $global_layout['contentSize'] ) ? (int) $global_layout['contentSize'] : 0;
+		}
+		if ( 0 === $max_display_width ) {
+			// No content width declared — cap to max srcset width to avoid absurd sizes strings
+			// (e.g. "full" size at 3000px) when no theme or page builder hook overrides them.
+			$max_display_width = (int) apply_filters( 'max_srcset_image_width', 2048, $display_size );
+		}
+
+		// Pass uncapped dimensions to wp_calculate_image_sizes so that theme/plugin filters
+		// receive the real image size and can generate accurate responsive sizes strings
+		// (e.g. a theme that expands the content column at wider viewports).
+		$sizes_attr           = \wp_calculate_image_sizes( $display_size, null, null, $attachment_id );
+		$uncustomized_default = sprintf( '(max-width: %1$dpx) 100vw, %1$dpx', $display_size[0] );
+
+		// If no filter customised the result and the image is wider than the content column,
+		// apply the cap — do not expose the raw intrinsic image width as the layout width.
+		if ( $sizes_attr === $uncustomized_default && $display_size[0] > $max_display_width ) {
+			$sizes_attr = sprintf( '(max-width: %1$dpx) 100vw, %1$dpx', $max_display_width );
+		}
+
+		$sizes_str = ! empty( $sizes_attr ) ? $sizes_attr : $uncustomized_default;
+
+		// Always set or replace sizes — do not skip if already present (may be stale from a prior render).
+		if ( stristr( $filtered_image, 'sizes=' ) ) {
+			$filtered_image = preg_replace( '/\bsizes="[^"]*"/', 'sizes="' . $sizes_str . '"', $filtered_image );
+		} else {
+			$filtered_image = str_replace( 'src=', sprintf( 'sizes="%s" src=', $sizes_str ), $filtered_image );
 		}
 
 		$append_classes = array();
@@ -468,10 +506,16 @@ class Attachment {
 				$attr['srcset'] = implode( ', ', $srcset_meta['entries'] );
 
 				if ( ! isset( $attr['sizes'] ) || empty( $attr['sizes'] ) ) {
-					$attr['sizes'] = sprintf(
-						'(max-width: %1$dpx) 100vw, %1$dpx',
-						$srcset_meta['widest']
-					);
+					if ( \is_array( $size ) ) {
+						$display_size = $size;
+					} else {
+						$registered   = Attachment::get_wp_image_sizes();
+						$display_size = isset( $registered[ $size ] )
+							? array( $registered[ $size ]['width'], $registered[ $size ]['height'] )
+							: array( $srcset_meta['widest'], 0 );
+					}
+					$sizes_attr    = \wp_calculate_image_sizes( $display_size, null, null, $attachment->ID );
+					$attr['sizes'] = ! empty( $sizes_attr ) ? $sizes_attr : sprintf( '(max-width: %1$dpx) 100vw, %1$dpx', $display_size[0] );
 				}
 			}
 		}
@@ -1143,7 +1187,7 @@ class Attachment {
 		$original = ( $original_image ? $original_image : ( $original_fallbacks ? $original_fallbacks[0] : $fallback ) );
 
 		// We need to do some special handling for vector images, as they may not have proper dimensions for the original file.
-		if ( 'VECTOR' === $media->DocumentType ) {// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentType` is defined by the SaaS API.
+		if ( isset( $media->DocumentType ) && 'VECTOR' === $media->DocumentType ) {// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentType` is defined by the SaaS API.
 			if ( isset( $original->Width ) && 0 === $original->Width && isset( $original->Height ) && 0 === $original->Height ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original->Width` and `$original->Height` are defined by the SaaS API.
 				// Find the entry with the largest `Width` and `Height`, and use that as the original image dimensions.
 				$max_width  = 0;
