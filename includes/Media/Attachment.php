@@ -736,6 +736,24 @@ class Attachment {
 			return $image;
 		}
 
+		// Auto-migrate: discard old-format _imageshop_media_sizes entries (pre-CDN on-demand refactor).
+		// Old format: https://v.imgi.no/{token}-300x200/image.jpg (no on-demand separator)
+		// New format: https://v.imgi.no/{token}-OWxOH__w=300_h=200_cropmode=ZOOM/image.jpg
+		if ( ! empty( $media_details['sizes'] ) ) {
+			foreach ( $media_details['sizes'] as $entry ) {
+				if ( ! empty( $entry['source_url'] ) ) {
+					if (
+						false !== strpos( $entry['source_url'], REST_Controller::IMAGESHOP_CDN_PREFIX )
+						&& false === strpos( $entry['source_url'], '__' )
+					) {
+						\delete_post_meta( $attachment_id, '_imageshop_media_sizes' );
+						$media_details = null;
+					}
+					break;
+				}
+			}
+		}
+
 		if ( empty( $media_details ) && $document_id ) {
 			$att           = Attachment::get_instance();
 			$media_details = $att->generate_imageshop_metadata( \get_post( $attachment_id ) );
@@ -743,6 +761,34 @@ class Attachment {
 			// If we still do not have a valid media_details array, bail.
 			if ( empty( $media_details ) || empty( $media_details['sizes'] ) ) {
 				return $image;
+			}
+		}
+
+		// Backfill any registered image sizes that were added after this cache was generated.
+		// Additive-only: existing entries are never removed, since old size URLs may be referenced in content.
+		if ( ! empty( $media_details['sizes'] ) ) {
+			$registered_sizes = Attachment::get_wp_image_sizes();
+			$missing_slugs    = array_diff( array_keys( $registered_sizes ), array_keys( $media_details['sizes'] ) );
+			if ( ! empty( $missing_slugs ) ) {
+				$backfilled = false;
+				foreach ( $missing_slugs as $slug ) {
+					if ( ! isset( $registered_sizes[ $slug ] ) ) {
+						continue;
+					}
+					$size_data = $this->get_image_url_for_size(
+						$attachment_id,
+						$registered_sizes[ $slug ]['width'],
+						$registered_sizes[ $slug ]['height'],
+						$registered_sizes[ $slug ]['crop']
+					);
+					if ( ! empty( $size_data ) ) {
+						$media_details['sizes'][ $slug ] = $size_data;
+						$backfilled                      = true;
+					}
+				}
+				if ( $backfilled ) {
+					\update_post_meta( $attachment_id, '_imageshop_media_sizes', $media_details );
+				}
 			}
 		}
 
@@ -1008,8 +1054,29 @@ class Attachment {
 			}
 		}
 
+		if ( ! isset( $media_details['sizes']['full'] ) && $original_image ) {
+			$threshold = (int) apply_filters(
+				'big_image_size_threshold',
+				2560,
+				array( $original_image->Width, $original_image->Height ), // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are provided by the SaaS API.
+				'',
+				$post->ID
+			);
+
+			if ( $threshold && ( $original_image->Width > $threshold || $original_image->Height > $threshold ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are provided by the SaaS API.
+				$scale     = $threshold / max( $original_image->Width, $original_image->Height ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are provided by the SaaS API.
+				$full_w    = (int) round( $original_image->Width * $scale ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is provided by the SaaS API.
+				$full_h    = (int) round( $original_image->Height * $scale ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is provided by the SaaS API.
+				$full_size = $this->get_image_url_for_size( $post->ID, $full_w, $full_h, false );
+
+				if ( ! empty( $full_size ) ) {
+					$media_details['sizes']['full'] = $full_size;
+				}
+			}
+		}
+
 		if ( ! isset( $media_details['sizes']['full'] ) ) {
-			$media_details['sizes']['full'] = $media_details['sizes']['original'];
+			$media_details['sizes']['full'] = $media_details['sizes']['original'] ?? null;
 		}
 
 		\update_post_meta( $post->ID, '_imageshop_media_sizes', $media_details );
