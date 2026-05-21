@@ -166,9 +166,13 @@ class Library {
 			.wp-admin.upload-php label[for="media-attachment-filters"],
 			.wp-admin.upload-php label[for="media-attachment-date-filters"],
 			.wp-admin.post-php #media-attachment-filters,
+			.wp-admin.post-new-php #media-attachment-filters,
 			.wp-admin.post-php #media-attachment-date-filters,
+			.wp-admin.post-new-php #media-attachment-date-filters,
 			.wp-admin.post-php label[for="media-attachment-filters"],
+			.wp-admin.post-new-php label[for="media-attachment-filters"],
 			.wp-admin.post-php label[for="media-attachment-date-filters"],
+			.wp-admin.post-new-php label[for="media-attachment-date-filters"],
 			.wp-admin.upload-php .view-switch .view-list,
 			.wp-admin.upload-php .select-mode-toggle-button {
 				display: none !important;
