@@ -836,9 +836,6 @@ class Attachment {
 			}
 		}
 
-		if ( 'full' === $size ) {
-			$size = 'original';
-		}
 		if ( \is_array( $size ) ) {
 
 			$candidates = array();
@@ -1054,14 +1051,6 @@ class Attachment {
 			'sizes' => array(),
 		);
 
-		/*
-		 * If the media has been attempted fetched previously, and we're still
-		 * waiting for Imageshop to process it, return the original image.
-		 */
-		if ( false !== \get_transient( '_imageshop_attachment_' . $post->ID . '_processing' ) ) {
-			return $media_details;
-		}
-
 		$image_sizes = Attachment::get_wp_image_sizes();
 
 		$media = $this->get_document( $post->_imageshop_document_id );
@@ -1099,23 +1088,10 @@ class Attachment {
 		}
 
 		if ( ! isset( $media_details['sizes']['full'] ) && $original_image ) {
-			$threshold = (int) apply_filters(
-				'big_image_size_threshold',
-				2560,
-				array( $original_image->Width, $original_image->Height ), // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are provided by the SaaS API.
-				'',
-				$post->ID
-			);
+			$full_size = $this->get_threshold_scaled_full_size( $post->ID, $original_image->Width, $original_image->Height ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are provided by the SaaS API.
 
-			if ( $threshold && ( $original_image->Width > $threshold || $original_image->Height > $threshold ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are provided by the SaaS API.
-				$scale     = $threshold / max( $original_image->Width, $original_image->Height ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are provided by the SaaS API.
-				$full_w    = (int) round( $original_image->Width * $scale ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is provided by the SaaS API.
-				$full_h    = (int) round( $original_image->Height * $scale ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is provided by the SaaS API.
-				$full_size = $this->get_image_url_for_size( $post->ID, $full_w, $full_h, false );
-
-				if ( ! empty( $full_size ) ) {
-					$media_details['sizes']['full'] = $full_size;
-				}
+			if ( ! empty( $full_size ) ) {
+				$media_details['sizes']['full'] = $full_size;
 			}
 		}
 
@@ -1304,6 +1280,44 @@ class Attachment {
 			'width'  => $width,
 			'height' => $height,
 		);
+	}
+
+	/**
+	 * Apply the WordPress big-image size threshold and return a scaled CDN size array.
+	 *
+	 * Centralises the threshold logic used by generate_imageshop_metadata(), rest_image_override(),
+	 * and Search so there is a single place to maintain it.
+	 *
+	 * @param int $attachment_id WordPress attachment ID (used for the filter and URL generation).
+	 * @param int $orig_w        Original image width in pixels.
+	 * @param int $orig_h        Original image height in pixels.
+	 *
+	 * @return array|null Size array (source_url, width, height, file) when the image exceeds the
+	 *                    threshold and a URL can be generated; null otherwise (caller should use
+	 *                    original dimensions for the 'full' size).
+	 */
+	public function get_threshold_scaled_full_size( $attachment_id, $orig_w, $orig_h ) {
+		$threshold = (int) \apply_filters(
+			'big_image_size_threshold',
+			2560,
+			array( $orig_w, $orig_h ),
+			'',
+			$attachment_id
+		);
+
+		if ( ! $threshold || ( $orig_w <= $threshold && $orig_h <= $threshold ) ) {
+			return null;
+		}
+
+		$scale     = $threshold / max( $orig_w, $orig_h );
+		$full_size = $this->get_image_url_for_size(
+			$attachment_id,
+			(int) round( $orig_w * $scale ),
+			(int) round( $orig_h * $scale ),
+			false
+		);
+
+		return ! empty( $full_size ) ? $full_size : null;
 	}
 
 	/**

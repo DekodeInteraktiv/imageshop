@@ -382,16 +382,40 @@ class Search {
 			}
 
 			if ( null !== $full_size_url ) {
-				$full_size_url = $full_size_url['source_url'];
+				$original_source_url = $full_size_url['source_url']; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 
 				$image_sizes = array(
-					'full' => array(
-						'url'         => $full_size_url,
+					'original' => array(
+						'url'         => $original_source_url,
 						'width'       => $original_media->Width, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Width` is provided by the SaaS API.
 						'height'      => $original_media->Height, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Height` is provided by the SaaS API.
 						'orientation' => ( $original_media->Height > $original_media->Width ? 'portrait' : 'landscape' ), // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Height` and `$original_media->Width` are provided by the SaaS API.
 					),
 				);
+
+				// Derive 'full' by applying the big-image threshold. Vectors scale losslessly so skip.
+				$full_w          = $original_media->Width; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+				$full_h          = $original_media->Height; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+				$full_source_url = $original_source_url;
+
+				if ( 'VECTOR' !== $media->DocumentType ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentType` is provided by the SaaS API.
+					$threshold_size = $this->attachment->get_threshold_scaled_full_size( $wp_post_id, $original_media->Width, $original_media->Height ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+
+					if ( ! empty( $threshold_size ) ) {
+						$full_w          = $threshold_size['width'];
+						$full_h          = $threshold_size['height'];
+						$full_source_url = $threshold_size['source_url'];
+					}
+				}
+
+				$image_sizes['full'] = array(
+					'url'         => $full_source_url,
+					'width'       => $full_w,
+					'height'      => $full_h,
+					'orientation' => ( $full_h > $full_w ? 'portrait' : 'landscape' ),
+				);
+
+				$full_size_url = $full_source_url;
 			}
 		} elseif ( $media_file_type && ! \stristr( $media_file_type, 'image' ) && ( \stristr( $media_file_type, 'video' ) || \stristr( $media_file_type, 'audio' ) ) ) {
 			$full_size_url = $this->attachment->get_permalink_for_size( $media->DocumentID, $media->FileName, 0, 0, false, true ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID`, `$media->FileName`, `$original_media->Width`, and `$oreiginal_media->Height` are provided by the SaaS API.
