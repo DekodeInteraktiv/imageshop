@@ -20,6 +20,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Attachment {
 	private static $instance;
 
+	private $max_filename_length = 128;
+
 	private $documents = array();
 
 	private $iterative_src = false;
@@ -1422,6 +1424,15 @@ class Attachment {
 		$file_ext = \pathinfo( $filename, PATHINFO_EXTENSION );
 		$filename = \pathinfo( $filename, PATHINFO_FILENAME );
 
+		/*
+		 * Trim long filenames.
+		 *
+		 * Very long URLs may hit limitations of what webservers allow to process,
+		 * we therefore enforce a max limit (by word) on the filename.
+		 */
+		$filename = $this->truncate_filename_by_words( $filename, '/[\s_]+/' );
+		$filename = $this->truncate_filename_by_words( $filename, '/-+/' );
+
 		// We sanitize the remaining filename to remove characters which some browsers or locales may not support properly.
 		$filename = \sanitize_title( \str_replace( '_', ' ', $filename ) );
 
@@ -1441,6 +1452,32 @@ class Attachment {
 
 		// Return a properly formatted filename, with sanitized name and correct extension.
 		return $filename . ( '.' !== substr( $file_ext, 0, 1 ) ? '.' : '' ) . $file_ext;
+	}
+
+	private function truncate_filename_by_words( $value, $delimiter_pattern ) {
+		if ( strlen( $value ) <= $this->max_filename_length ) {
+			return $value;
+		}
+
+		$parts = preg_split( $delimiter_pattern, $value, -1, PREG_SPLIT_NO_EMPTY );
+
+		if ( ! is_array( $parts ) || empty( $parts ) ) {
+			return $value;
+		}
+
+		$kept = array();
+
+		foreach ( $parts as $part ) {
+			$candidate = implode( ' ', array_merge( $kept, array( $part ) ) );
+
+			if ( strlen( $candidate ) > $this->max_filename_length ) {
+				break;
+			}
+
+			$kept[] = $part;
+		}
+
+		return ! empty( $kept ) ? implode( ' ', $kept ) : $value;
 	}
 
 	/**
