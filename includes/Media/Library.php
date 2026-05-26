@@ -76,8 +76,6 @@ class Library {
 			$this->asset_version( 'assets/styles/media-modal.css' )
 		);
 
-		$default_interface = (int) \get_option( 'imageshop_upload_interface' );
-
 		\wp_localize_script(
 			'imageshop-media-library-modal-filters',
 			'ImageshopMediaLibrary',
@@ -93,7 +91,7 @@ class Library {
 					),
 				),
 				'interfaces'        => $imageshop->get_interfaces(),
-				'default_interface' => $default_interface,
+				'default_interface' => 'all',
 				'categories'        => $imageshop->get_categories(),
 				'languages'         => Imageshop::available_locales(),
 				'labels'            => array(

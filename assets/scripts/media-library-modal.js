@@ -307,7 +307,6 @@
 
 			if ( ImageshopInterfaceDOM && ImageshopCategoryDOM ) {
 				attachInterfaceChangeHandler();
-				getImageshopCategories( ImageshopMediaLibrary.default_interface );
 			} else {
 				ImageshopSelectorTimer = setInterval( () => {
 					setSelectors();
@@ -316,7 +315,6 @@
 						clearInterval( ImageshopSelectorTimer );
 
 						attachInterfaceChangeHandler();
-						getImageshopCategories( ImageshopMediaLibrary.default_interface );
 					}
 				}, 500 );
 			}
