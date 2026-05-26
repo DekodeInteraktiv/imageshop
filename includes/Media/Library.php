@@ -9,6 +9,7 @@ namespace Imageshop\WordPress\Media;
 
 use Imageshop\WordPress\Imageshop;
 use Imageshop\WordPress\API\REST_Controller;
+use Imageshop\WordPress\Upgrade;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	die();
