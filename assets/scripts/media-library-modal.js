@@ -41,6 +41,21 @@
 	let ImageshopInterfaceFilters = wp.media.view.AttachmentFilters.extend({
 		id: 'imageshop-media-library-interface',
 
+		select: function() {
+			var current = this.model.get( 'imageshop_interface' );
+			var value = 'all';
+
+			_.find( this.filters, function( filter, id ) {
+				// eslint-disable-next-line eqeqeq
+				if ( filter.props && filter.props.imageshop_interface != null && current == filter.props.imageshop_interface ) {
+					value = id;
+					return true;
+				}
+			} );
+
+			this.$el.val( value );
+		},
+
 		createFilters: function() {
 			var filters = {};
 			// Formats the 'terms' we've included via wp_localize_script()
@@ -181,6 +196,13 @@
 	 */
 	let AttachmentsBrowser = wp.media.view.AttachmentsBrowser;
 	wp.media.view.AttachmentsBrowser = wp.media.view.AttachmentsBrowser.extend({
+		initialize: function() {
+			this.collection.props.set( {
+				posts_per_page: 25,
+				imageshop_interface: ImageshopMediaLibrary.default_interface,
+			}, { silent: true } );
+			AttachmentsBrowser.prototype.initialize.call( this );
+		},
 		createToolbar: function() {
 			// Make sure to load the original toolbar
 			AttachmentsBrowser.prototype.createToolbar.call( this );
@@ -252,13 +274,11 @@
 
 			let ImageshopInterfaceDOM,
 				ImageshopCategoryDOM,
-				ImageshopSelectorTimer,
-				ImageshopSelectPostsPerPageDOM;
+				ImageshopSelectorTimer;
 
 			const setSelectors = () => {
 				ImageshopInterfaceDOM = document.getElementById( 'imageshop-media-library-interface' );
 				ImageshopCategoryDOM = document.getElementById( 'imageshop-media-library-category' );
-				ImageshopSelectPostsPerPageDOM = document.getElementById( 'imageshop-posts-per-page' );
 			}
 
 			setSelectors()
@@ -286,10 +306,8 @@
 			}
 
 			if ( ImageshopInterfaceDOM && ImageshopCategoryDOM ) {
-				ImageshopInterfaceDOM.value = ImageshopMediaLibrary.default_interface;
 				attachInterfaceChangeHandler();
 				getImageshopCategories( ImageshopMediaLibrary.default_interface );
-				ImageshopSelectPostsPerPageDOM.dispatchEvent( new Event( 'change' ) );
 			} else {
 				ImageshopSelectorTimer = setInterval( () => {
 					setSelectors();
@@ -297,11 +315,8 @@
 					if ( ImageshopInterfaceDOM && ImageshopCategoryDOM ) {
 						clearInterval( ImageshopSelectorTimer );
 
-						ImageshopInterfaceDOM.value = ImageshopMediaLibrary.default_interface;
 						attachInterfaceChangeHandler();
 						getImageshopCategories( ImageshopMediaLibrary.default_interface );
-
-						ImageshopSelectPostsPerPageDOM.dispatchEvent( new Event( 'change' ) );
 					}
 				}, 500 );
 			}
