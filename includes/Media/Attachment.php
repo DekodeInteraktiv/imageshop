@@ -1423,7 +1423,7 @@ class Attachment {
 		$filename = \pathinfo( $filename, PATHINFO_FILENAME );
 
 		// We sanitize the remaining filename to remove characters which some browsers or locales may not support properly.
-		$filename = \sanitize_title( $filename );
+		$filename = \sanitize_title( \str_replace( '_', ' ', $filename ) );
 
 		if ( ! empty( $file_type['type'] ) && is_string( $file_type['type'] ) && stristr( $file_type['type'], 'image/' ) !== false && stristr( $file_type['type'], 'svg+xml' ) === false ) {
 			// Set the file extension for the file, this is always `.jpg` for images, unless webp support is enabled.
