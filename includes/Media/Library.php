@@ -52,7 +52,8 @@ class Library {
 					'media-editor',
 					'media-views',
 					'wp-api-fetch',
-				)
+				),
+				$this->asset_version( 'assets/scripts/media-library.js' )
 			);
 		}
 
@@ -63,14 +64,15 @@ class Library {
 				'media-editor',
 				'media-views',
 				'wp-api-fetch',
-			)
+			),
+			$this->asset_version( 'assets/scripts/media-library-modal.js' )
 		);
 
 		\wp_enqueue_style(
 			'media-modal',
 			\plugins_url( '/assets/styles/media-modal.css', IMAGESHOP_PLUGIN_BASE_NAME ),
 			array(),
-			\Imageshop\WordPress\Upgrade::get_current_version()
+			$this->asset_version( 'assets/styles/media-modal.css' )
 		);
 
 		$default_interface = (int) \get_option( 'imageshop_upload_interface' );
@@ -149,6 +151,25 @@ class Library {
 				<?php
 			}
 		);
+	}
+
+	/**
+	 * Returns a version string for an asset file in the assets/ directory.
+	 * On local/development environments, uses the file's modification time for
+	 * reliable cache busting. On other environments, uses the plugin version.
+	 *
+	 * @param string $relative_path Path relative to the plugin root (e.g. 'assets/scripts/foo.js').
+	 * @return string
+	 */
+	private function asset_version( string $relative_path ): string {
+		if ( \in_array( \wp_get_environment_type(), array( 'local', 'development' ), true ) ) {
+			$abs_path = IMAGESHOP_ABSPATH . '/' . \ltrim( $relative_path, '/' );
+			if ( \file_exists( $abs_path ) ) {
+				return (string) \filemtime( $abs_path );
+			}
+		}
+
+		return Upgrade::get_current_version();
 	}
 
 	/**
