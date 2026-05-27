@@ -92,7 +92,7 @@ class Library {
 				),
 				'interfaces'        => $imageshop->get_interfaces(),
 				'default_interface' => 'all',
-				'categories'        => $imageshop->get_categories(),
+				'categories'        => $imageshop->get_categories( 0 ),
 				'languages'         => Imageshop::available_locales(),
 				'labels'            => array(
 					'origins'    => array(

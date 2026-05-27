@@ -2,8 +2,8 @@
 Tags: media library, media cdn, DAM
 Requires at least: 6.6
 Requires PHP: 7.2
-Tested up to: 6.9
-Stable tag: 1.5.0
+Tested up to: 7.0
+Stable tag: 1.6.0
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,6 +42,20 @@ We welcome both suggestions, discussions, and code! Check out the project source
 
 == Changelog ==
 
+= 1.6.0 (2026-05-27) =
+* Feature: Introduced on-demand image permalinks, replacing the previous statically generated permalink variations for more flexible and up-to-date image URL handling.
+* Feature: Added support for an 'original' size option when inserting images, with refined logic for deriving the full image size.
+* Enhancement: Category filters in the media library now adapt based on which interface is actively selected.
+* Enhancement: Reduced the number of API calls made when loading the media library by passing more default values upfront.
+* Enhancement: Improved initial media library load performance by eliminating duplicate requests.
+* Enhancement: Permalink slugs now strip underscores in favor of dashes for more consistent and readable URLs.
+* Enhancement: Introduced a maximum filename length cap for image permalinks.
+* Enhancement: Improved srcset handling to more reliably serve the correct image dimensions across classic and modern editor scenarios.
+* Enhancement: Media modal styling updated to match WordPress 7.0 visual changes.
+* Enhancement: Versioned static assets to improve browser cache management across environments.
+* Bugfix: Media modal CSS effects now apply correctly on post-new.php in addition to post.php.
+* Compatibility: SVG srcset images now correctly handle varying attribute data types passed by third-party plugins.
+
 = 1.5.0 (2025-12-18) =
 * Media: Change the default setting for media uploads to not synchronize to Imageshop automatically, separating responsibilities.
 * Media: Made WebP conversion the default value for new installations.
@@ -51,7 +65,3 @@ We welcome both suggestions, discussions, and code! Check out the project source
 * Media: Keep showing previews of non-image media when viewing media details in the media library.
 * Media Modal: Hide the media type filter from the modal inserter, as it is context aware and plays no role with the Imageshop plugin active.
 * Onboarding: Add notice to onboarding flow about the potential conflicts multiple media management plugins can have with each other.
-
-= 1.4.0 (2025-11-28) =
-* Feature: Added support for SVG vector images.
-* Bugfix: Fixed an issue where you might not get a status response when testing a new API key in the settings panel.
