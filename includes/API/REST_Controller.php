@@ -683,6 +683,13 @@ class REST_Controller {
 	 * @return array|mixed|object
 	 */
 	public function get_document( $id ) {
+		$cache_key = $this->get_document_cache_key( $id, $this->language );
+
+		$cached = \get_transient( $cache_key );
+		if ( false !== $cached ) {
+			return $cached;
+		}
+
 		$url  = \add_query_arg(
 			array(
 				'language'   => $this->language,
@@ -701,7 +708,51 @@ class REST_Controller {
 			return (object) array();
 		}
 
+		// Only cache complete documents: the API can return a 200 with an empty/error body
+		// for a deleted or inaccessible document, and pinning that for the full TTL is worse
+		// than re-requesting it. Throttling those is left to the caller's negative cache.
+		if ( \is_object( $ret ) && isset( $ret->SubDocumentList ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$ret->SubDocumentList` is provided by the SaaS API.
+			\set_transient( $cache_key, $ret, (int) \apply_filters( 'imageshop_document_cache_ttl', \DAY_IN_SECONDS, $id ) );
+		}
+
 		return $ret;
+	}
+
+	/**
+	 * Build the transient key used to cache a single document lookup.
+	 *
+	 * Keyed by language because the API returns locale-specific metadata, and by the active
+	 * token so the cache is scoped to one account and is transparently invalidated when the
+	 * credentials change.
+	 *
+	 * @param int    $id       The Imageshop document ID.
+	 * @param string $language The language code the document was requested in.
+	 *
+	 * @return string
+	 */
+	private function get_document_cache_key( $id, string $language ): string {
+		$account = \substr( \md5( (string) $this->api_token ), 0, 8 );
+
+		return 'imageshop_document_' . $account . '_' . $language . '_' . $id;
+	}
+
+	/**
+	 * Remove any cached lookups for a single document across all known languages.
+	 *
+	 * @param int $id The Imageshop document ID.
+	 *
+	 * @return void
+	 */
+	public function delete_document_cache( $id ): void {
+		$languages = \array_keys( Imageshop::available_locales() );
+
+		// Always cover the default 'en' fallback as well as the currently active language.
+		$languages[] = 'en';
+		$languages[] = $this->language;
+
+		foreach ( \array_unique( $languages ) as $language ) {
+			\delete_transient( $this->get_document_cache_key( $id, $language ) );
+		}
 	}
 
 	/**
