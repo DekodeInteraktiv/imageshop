@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class REST_Controller {
 	private const IMAGESHOP_API_BASE_URL               = 'https://api.imageshop.no';
-	public const IMAGESHOP_CDN_PREFIX                 = 'https://v.imgi.no';
+	public const IMAGESHOP_CDN_PREFIX                  = 'https://v.imgi.no';
 	private const IMAGESHOP_API_CAN_UPLOAD             = '/Login/CanUpload';
 	private const IMAGESHOP_API_WHOAMI                 = '/Login/WhoAmI';
 	private const IMAGESHOP_API_CREATE_DOCUMENT        = '/Document/CreateDocument';
