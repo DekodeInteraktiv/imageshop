@@ -9,7 +9,7 @@
 	},
     "require-dev": {
 		"wp-coding-standards/wpcs": "^3.0.0",
-		"symfony/var-dumper": "^7.3"
+		"symfony/var-dumper": "^8.1"
 	},
 	"scripts": {
 		"lint": "php ./vendor/squizlabs/php_codesniffer/bin/phpcs",
