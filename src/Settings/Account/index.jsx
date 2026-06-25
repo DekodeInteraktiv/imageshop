@@ -39,12 +39,12 @@ export default function Account( { settings, updateSettings } ) {
 
 	return (
 		<div>
-			<Infobox className="grid grid-cols-1 gap-2">
-				<p className="m-0!">
+			<Infobox className="imageshop:grid imageshop:grid-cols-1 imageshop:gap-2">
+				<p className="imageshop:m-0!">
 					{ __( 'The Imageshop plugin will automatically replace your Media Library with the Imageshop media bank, giving you direct access to your organizations entire media portfolio.', 'imageshop-dam-connector' ) }
 				</p>
 
-				<p className="m-0!">
+				<p className="imageshop:m-0!">
 					{ __( 'To make use of the Imageshop services, you will need to register for an account. Create a new Imageshop account, or view your account details.', 'imageshop-dam-connector' ) }
 				</p>
 			</Infobox>
@@ -60,13 +60,13 @@ export default function Account( { settings, updateSettings } ) {
 						</SectionDescription>
 					</SectionHeader>
 
-					<div className="grid grid-cols-1 gap-2">
+					<div className="imageshop:grid imageshop:grid-cols-1 imageshop:gap-2">
 						<label htmlFor="api_key">{ __( 'Imageshop Key:', 'imageshop-dam-connector' ) }</label>
-						<div className="grid grid-cols-1 gap-1">
+						<div className="imageshop:grid imageshop:grid-cols-1 imageshop:gap-1">
 							<input
 								type="text"
 								placeholder={ __( 'Enter your Imageshop key', 'imageshop-dam-connector' ) }
-								className="w-full"
+								className="imageshop:w-full"
 								id="api_key"
 								value={ settings.api_key }
 								onChange={ ( event ) => updateApiKey( event.target.value ) }
@@ -74,12 +74,12 @@ export default function Account( { settings, updateSettings } ) {
 							{ showKeyValidator &&
 								<>
 									<button
-										className="bg-primary text-white px-4 py-2 rounded-md hover:bg-accent/40 hover:text-black cursor-pointer transition-colors"
+										className="imageshop:bg-primary imageshop:text-white imageshop:px-4 imageshop:py-2 imageshop:rounded-md imageshop:hover:bg-accent/40 imageshop:hover:text-black imageshop:cursor-pointer imageshop:transition-colors"
 										onClick={ testApiKey }
 									>
 										{ __( 'Test the modified API key', 'imageshop-dam-connector' ) }
 									</button>
-									<span className="italic">
+									<span className="imageshop:italic">
 										You should always test a new API key before clicking through to store your changes.
 									</span>
 									{ imageshopMessage &&
@@ -99,19 +99,19 @@ export default function Account( { settings, updateSettings } ) {
 						<SectionDescription>
 							{ __( 'Even if you use the Imageshop integration on your site, you can continue to upload images directly to WordPress. You also have the option to have these images added to Imageshop. However, this is not something we recommend.', 'imageshop-dam-connector' ) }
 						</SectionDescription>
-						<SectionDescription className="font-semibold">
+						<SectionDescription className="imageshop:font-semibold">
 							{ __( 'To ensure your image archive maintains the highest quality possible, we recommend that only files that will be used across multiple channels are uploaded directly to Imageshop for distribution.', 'imageshop-dam-connector' ) }
 						</SectionDescription>
 						<SectionDescription>
 							{ __( 'Files that will only be used on your WordPress site will then not clutter your Imageshop archive, and for this reason we recommend keeping this option unchecked.', 'imageshop-dam-connector' ) }
 						</SectionDescription>
 
-						<SectionDescription className="italic">
+						<SectionDescription className="imageshop:italic">
 							{ __( 'This setting does not affect existing images, and is disabled by default.', 'imageshop-dam-connector' ) }
 						</SectionDescription>
 
 						<div>
-							<label className="inline-block py-2">
+							<label className="imageshop:inline-block imageshop:py-2">
 								<input
 									type="checkbox"
 									checked={ settings.upload_to_imageshop === 'yes' }
@@ -135,9 +135,9 @@ export default function Account( { settings, updateSettings } ) {
 								</SectionDescription>
 							</SectionHeader>
 
-							<div className="grid grid-cols-1 gap-2">
-								<label className="sr-only" htmlFor="default_interface">{ __( 'Default interface:', 'imageshop-dam-connector' ) }</label>
-								<select className="w-full" id="default_interface">
+							<div className="imageshop:grid imageshop:grid-cols-1 imageshop:gap-2">
+								<label className="imageshop:sr-only" htmlFor="default_interface">{ __( 'Default interface:', 'imageshop-dam-connector' ) }</label>
+								<select className="imageshop:w-full" id="default_interface">
 									<option value="">&mdash; { __( 'Select your default interface', 'imageshop-dam-connector' ) } &mdash;</option>
 									{ settings?.interfaces && settings?.interfaces?.map( ( apiInterface ) => (
 										<option

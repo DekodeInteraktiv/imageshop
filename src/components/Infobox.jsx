@@ -4,7 +4,7 @@ import clsx from "clsx";
 
 export default function Infobox({ children, className }) {
 	return (
-		<div className={clsx('bg-accent/10 border border-accent/20 rounded-md p-4 text-sm text-gray-700 mb-4', className)}>
+		<div className={clsx('imageshop:bg-accent/10 imageshop:border imageshop:border-accent/20 imageshop:rounded-md imageshop:p-4 imageshop:text-sm imageshop:text-gray-700 imageshop:mb-4', className)}>
 			{children}
 		</div>
 	);

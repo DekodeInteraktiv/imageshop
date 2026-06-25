@@ -9,15 +9,15 @@ const Completed = ( { setShowWizard, setShowNotice } ) => {
 
 	return (
 		<>
-			<div className="p-4">
+			<div className="imageshop:p-4">
 				<p>
 					{ __( 'Your site has now been configured to retrieve media from Imageshop.', 'imageshop-dam-connector' ) }
 				</p>
 			</div>
 
-			<div className="bg-gray-50 p-4 rounded-b-lg">
-				<div className="flex justify-end gap-4">
-					<button type="button" className="cursor-pointer bg-primary py-2 px-4 text-white rounded-md hover:bg-accent" onClick={ () => closeOnboarding() }>
+			<div className="imageshop:bg-gray-50 imageshop:p-4 imageshop:rounded-b-lg">
+				<div className="imageshop:flex imageshop:justify-end imageshop:gap-4">
+					<button type="button" className="imageshop:cursor-pointer imageshop:bg-primary imageshop:py-2 imageshop:px-4 imageshop:text-white imageshop:rounded-md imageshop:hover:bg-accent" onClick={ () => closeOnboarding() }>
 						{ __( 'Finish setup', 'imageshop-dam-connector' ) }
 					</button>
 				</div>

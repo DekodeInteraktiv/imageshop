@@ -7,18 +7,18 @@ const Introduction = ( { setStep } ) => {
 
 	return (
 		<>
-			<p className="p-4">
+			<p className="imageshop:p-4">
 				{ __( 'After setup, Imageshop will become your one source of truth for all media on your site.', 'imageshop-dam-connector' ) }
 			</p>
 
-			<div className="bg-gray-50 p-4 rounded-b-lg">
-				<div className="flex justify-end gap-4">
-					<a href="https://imageshop.no" className="flex justify-center cursor-pointer bg-none py-2 px-4 text-black rounded-md hover:bg-accent/20 hover:underline" target="_blank" rel="noopener noreferrer">
-						<ArrowTopRightOnSquareIcon className="inline-block w-4 h-4 mr-1" />
+			<div className="imageshop:bg-gray-50 imageshop:p-4 imageshop:rounded-b-lg">
+				<div className="imageshop:flex imageshop:justify-end imageshop:gap-4">
+					<a href="https://imageshop.no" className="imageshop:flex imageshop:justify-center imageshop:cursor-pointer imageshop:bg-none imageshop:py-2 imageshop:px-4 imageshop:text-black imageshop:rounded-md imageshop:hover:bg-accent/20 imageshop:hover:underline" target="_blank" rel="noopener noreferrer">
+						<ArrowTopRightOnSquareIcon className="imageshop:inline-block imageshop:w-4 imageshop:h-4 imageshop:mr-1" />
 						{ __( 'Create an account', 'imageshop-dam-connector' )}
 					</a>
 
-					<button type="button" className="cursor-pointer bg-primary py-2 px-4 text-white rounded-md hover:bg-accent" onClick={ () => setStep( 2 ) }>
+					<button type="button" className="imageshop:cursor-pointer imageshop:bg-primary imageshop:py-2 imageshop:px-4 imageshop:text-white imageshop:rounded-md imageshop:hover:bg-accent" onClick={ () => setStep( 2 ) }>
 						{ __( 'Start setup', 'imageshop-dam-connector' ) }
 					</button>
 				</div>

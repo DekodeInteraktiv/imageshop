@@ -19,15 +19,15 @@ import Logo from '../../assets/images/logo.svg';
 
 const tabs = {
 	settings: {
-		label: <><WifiIcon className="inline-block w-4 h-4" /> <span>{ __( 'Connection settings', 'imageshop-dam-conenctor' ) }</span></>,
+		label: <><WifiIcon className="imageshop:inline-block imageshop:w-4 imageshop:h-4" /> <span>{ __( 'Connection settings', 'imageshop-dam-conenctor' ) }</span></>,
 		hasSharedFooter: true,
 	},
 	advanced: {
-		label: <><CpuChipIcon className="inline-block w-4 h-4" /> <span>{ __( 'Advanced', 'imageshop-dam-connector' ) }</span></>,
+		label: <><CpuChipIcon className="imageshop:inline-block imageshop:w-4 imageshop:h-4" /> <span>{ __( 'Advanced', 'imageshop-dam-connector' ) }</span></>,
 		hasSharedFooter: true,
 	},
 	sync: {
-		label: <><ArrowPathIcon className="inline-block w-4 h-4" /> <span>{ __( 'Full sync commands', 'imageshop-dam-connector' ) }</span></>,
+		label: <><ArrowPathIcon className="imageshop:inline-block imageshop:w-4 imageshop:h-4" /> <span>{ __( 'Full sync commands', 'imageshop-dam-connector' ) }</span></>,
 		hasSharedFooter: false,
 	},
 };
@@ -86,16 +86,16 @@ export default function Settings() {
 	}, [ activeTab ] );
 
 	return (
-		<div className="w-full pr-4">
-			<img src={ Logo } alt="ImageShop Logo" className="w-64 my-8" />
+		<div className="imageshop:w-full imageshop:pr-4">
+			<img src={ Logo } alt="ImageShop Logo" className="imageshop:w-64 imageshop:my-8" />
 
-			<div className="w-full grid grid-cols-1 gap-4 bg-white rounded-md p-8 mr-8 mt-4 mb-8 shadow-md">
-				<div className="flex flex-cols gap-16">
+			<div className="imageshop:w-full imageshop:grid imageshop:grid-cols-1 imageshop:gap-4 imageshop:bg-white imageshop:rounded-md imageshop:p-8 imageshop:mr-8 imageshop:mt-4 imageshop:mb-8 imageshop:shadow-md">
+				<div className="imageshop:flex imageshop:flex-cols imageshop:gap-16">
 					<header>
 						<Tabs tabs={ tabs } setActiveTab={ setActiveTab } activeTab={ activeTab } />
 					</header>
 
-					<div className="grid grid-cols-1 gap-3">
+					<div className="imageshop:grid imageshop:grid-cols-1 imageshop:gap-3">
 						<div>
 							{ activeTab === 'settings' && <Account settings={ settings } updateSettings={ updateSettings } /> }
 							{ activeTab === 'advanced' && <Advanced settings={ settings } updateSettings={ updateSettings } /> }
@@ -108,14 +108,14 @@ export default function Settings() {
 
 								<div>
 									{ saveNotice && (
-										<p className="shadow-lg border-1 border-primary bg-white p-4 rounded-md text-primary flex items-center">
-											<InformationCircleIcon className="inline-block w-6 h-6 mr-2 text-primary" />
+										<p className="imageshop:shadow-lg imageshop:border-1 imageshop:border-primary imageshop:bg-white imageshop:p-4 imageshop:rounded-md imageshop:text-primary imageshop:flex imageshop:items-center">
+											<InformationCircleIcon className="imageshop:inline-block imageshop:w-6 imageshop:h-6 imageshop:mr-2 imageshop:text-primary" />
 											{ saveNotice }
 										</p>
 									) }
 
 									<button
-										className="bg-primary text-white px-4 py-2 rounded-md hover:bg-accent cursor-pointer transition-colors"
+										className="imageshop:bg-primary imageshop:text-white imageshop:px-4 imageshop:py-2 imageshop:rounded-md imageshop:hover:bg-accent imageshop:cursor-pointer imageshop:transition-colors"
 										onClick={ saveSettings }
 									>
 										Save settings

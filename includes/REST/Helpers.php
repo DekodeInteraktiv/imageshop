@@ -54,7 +54,7 @@ class Helpers {
 
 		$response = array(
 			'message' => \sprintf(
-				'<div class="bg-success/20 border border-success/30 rounded-md p-4 text-sm text-gray-900 grid grid-cols-1 gap-2 fade"><p class="m-0!">%s</p></div>',
+				'<div class="imageshop:bg-success/20 imageshop:border imageshop:border-success/30 imageshop:rounded-md imageshop:p-4 imageshop:text-sm imageshop:text-gray-900 imageshop:grid imageshop:grid-cols-1 imageshop:gap-2 fade"><p class="imageshop:m-0!">%s</p></div>',
 				\esc_html__( 'Connection is successfully established. You can safely save your settings.', 'imageshop-dam-connector' )
 			),
 		);
@@ -65,13 +65,13 @@ class Helpers {
 
 			if ( ! $can_upload ) {
 				$response['message'] = \sprintf(
-					'<div class="bg-warning/20 border border-warning/30 rounded-md p-4 text-sm text-gray-900 grid grid-cols-1 gap-2 fade"><p class="m-0!">%s</p></div>',
+					'<div class="imageshop:bg-warning/20 imageshop:border imageshop:border-warning/30 imageshop:rounded-md imageshop:p-4 imageshop:text-sm imageshop:text-gray-900 imageshop:grid imageshop:grid-cols-1 imageshop:gap-2 fade"><p class="imageshop:m-0!">%s</p></div>',
 					\esc_html__( 'Could not establish a connection to Imageshop.', 'imageshop-dam-connector' )
 				);
 			}
 		} catch ( \Exception $e ) {
 			$response['message'] = \sprintf(
-				'<div class="bg-error/20 border border-error/30 rounded-md p-4 text-sm text-gray-900 grid grid-cols-1 gap-2 fade"><p class="m-0!">%s</p></div>',
+				'<div class="imageshop:bg-error/20 imageshop:border imageshop:border-error/30 imageshop:rounded-md imageshop:p-4 imageshop:text-sm imageshop:text-gray-900 imageshop:grid imageshop:grid-cols-1 imageshop:gap-2 fade"><p class="imageshop:m-0!">%s</p></div>',
 				\sprintf(
 					// translators: 1: Error message. 2: Error code.
 					\esc_html__( 'Could not establish a connection: %1$s (%2$d)', 'imageshop-dam-connector' ),

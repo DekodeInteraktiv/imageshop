@@ -36,7 +36,7 @@ const Tokens = ( { setStep } ) => {
 
 	return (
 		<>
-			<div className="p-4">
+			<div className="imageshop:p-4">
 				<p>
 					{ __( 'Enter your API token here. You can find your API token in your ImageShop account.', 'imageshop-dam-connector' ) }
 				</p>
@@ -44,14 +44,14 @@ const Tokens = ( { setStep } ) => {
 				{ validationNotice &&
 					<>
 						{ validToken &&
-							<p className="m-0!">
+							<p className="imageshop:m-0!">
 								{ __( '✔ Your API token is valid.', 'imageshop-dam-connector' ) }
 							</p>
 						}
 
 						{ ! validToken &&
-							<div className="mb-2">
-								<p className="m-0!">
+							<div className="imageshop:mb-2">
+								<p className="imageshop:m-0!">
 									{ __( '❌ Your API token is invalid', 'imageshop-dam-connector' ) }
 								</p>
 							</div>
@@ -59,31 +59,31 @@ const Tokens = ( { setStep } ) => {
 					</>
 				}
 
-				<div className="relative w-full">
+				<div className="imageshop:relative imageshop:w-full">
 					{ isTestingToken &&
-						<div className="absolute top-0 left-0 flex justify-center items-center w-full h-full bg-gray-100">
-							<ArrowPathIcon className="inline-block w-6 h-6 animate-spin text-primary" />
+						<div className="imageshop:absolute imageshop:top-0 imageshop:left-0 imageshop:flex imageshop:justify-center imageshop:items-center imageshop:w-full imageshop:h-full imageshop:bg-gray-100">
+							<ArrowPathIcon className="imageshop:inline-block imageshop:w-6 imageshop:h-6 imageshop:animate-spin imageshop:text-primary" />
 						</div>
 					}
-					<input type="text" className="w-full" value={ token } onChange={ ( e ) => setToken( e.target.value ) } />
+					<input type="text" className="imageshop:w-full" value={ token } onChange={ ( e ) => setToken( e.target.value ) } />
 					{ validationNotice && ! validToken &&
-						<span className="italic text-red-500">
+						<span className="imageshop:italic imageshop:text-red-500">
 							{ validationNotice }
 						</span>
 					}
 				</div>
 			</div>
 
-			<div className="bg-gray-50 p-4 rounded-b-lg">
-				<div className="flex justify-end gap-4">
+			<div className="imageshop:bg-gray-50 imageshop:p-4 imageshop:rounded-b-lg">
+				<div className="imageshop:flex imageshop:justify-end imageshop:gap-4">
 					{ ! validToken &&
-						<button type="button" disabled={ isTestingToken } className="cursor-pointer bg-primary py-2 px-4 text-white rounded-md hover:bg-accent" onClick={ () => testToken() }>
+						<button type="button" disabled={ isTestingToken } className="imageshop:cursor-pointer imageshop:bg-primary imageshop:py-2 imageshop:px-4 imageshop:text-white imageshop:rounded-md imageshop:hover:bg-accent" onClick={ () => testToken() }>
 							{ __( 'Test API token', 'imageshop-dam-connector' ) }
 						</button>
 					}
 
 					{ validToken &&
-						<button type="button" className="cursor-pointer bg-primary py-2 px-4 text-white rounded-md hover:bg-accent" onClick={ () => setStep( 3 ) }>
+						<button type="button" className="imageshop:cursor-pointer imageshop:bg-primary imageshop:py-2 imageshop:px-4 imageshop:text-white imageshop:rounded-md imageshop:hover:bg-accent" onClick={ () => setStep( 3 ) }>
 							{ __( 'Save and continue', 'imageshop-dam-connector' ) }
 						</button>
 					}

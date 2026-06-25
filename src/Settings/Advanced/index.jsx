@@ -25,7 +25,7 @@ export default function Advanced( { settings, updateSettings } ) {
 					</SectionHeader>
 
 					<div>
-						<label className="inline-block py-2">
+						<label className="imageshop:inline-block imageshop:py-2">
 							<input
 								type="checkbox"
 								checked={ settings.webp_support === 'yes' }
@@ -47,13 +47,13 @@ export default function Advanced( { settings, updateSettings } ) {
 						<SectionDescription>
 							{ __( 'Some users may experience performance issues when working with pages containing many manually added images that have not been processed by WordPress or Imageshop. This option will disable the extra processing performed to guarantee srcset attributes are applied.', 'imageshop-dam-connector' ) }
 						</SectionDescription>
-						<SectionDescription className="italic">
+						<SectionDescription className="imageshop:italic">
 							{ __( 'Note that this may cause SEO warnings where large images are being loaded on your site, and should only be used if you are experiencing explicit performance issues.', 'imageshop-dam-connector' ) }
 						</SectionDescription>
 					</SectionHeader>
 
 					<div>
-						<label className="inline-block py-2">
+						<label className="imageshop:inline-block imageshop:py-2">
 							<input
 								type="checkbox"
 								checked={ settings.disable_srcset === 'yes' }

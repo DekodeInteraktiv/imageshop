@@ -42,8 +42,8 @@ export default function Sync( { settings, refreshSettings } ) {
 			</p>
 
 			{ syncMessage && (
-				<p className="shadow-lg border-1 border-primary bg-white p-4 rounded-md text-primary flex items-center">
-					<InformationCircleIcon className="inline-block w-6 h-6 mr-2 text-primary" />
+				<p className="imageshop:shadow-lg imageshop:border-1 imageshop:border-primary imageshop:bg-white imageshop:p-4 imageshop:rounded-md imageshop:text-primary imageshop:flex imageshop:items-center">
+					<InformationCircleIcon className="imageshop:inline-block imageshop:w-6 imageshop:h-6 imageshop:mr-2 imageshop:text-primary" />
 					{ syncMessage }
 				</p>
 			) }
@@ -59,7 +59,7 @@ export default function Sync( { settings, refreshSettings } ) {
 						</SectionDescription>
 					</SectionHeader>
 
-					<button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-accent/40 hover:text-black cursor-pointer transition-colors">
+					<button className="imageshop:bg-primary imageshop:text-white imageshop:px-4 imageshop:py-2 imageshop:rounded-md imageshop:hover:bg-accent/40 imageshop:hover:text-black imageshop:cursor-pointer imageshop:transition-colors">
 						{ __( 'Sync WordPress images to the Imageshop cloud', 'imageshop-dam-connector' ) }
 					</button>
 				</Section>
@@ -74,7 +74,7 @@ export default function Sync( { settings, refreshSettings } ) {
 						</SectionDescription>
 					</SectionHeader>
 
-					<button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-accent/40 hover:text-black cursor-pointer transition-colors">
+					<button className="imageshop:bg-primary imageshop:text-white imageshop:px-4 imageshop:py-2 imageshop:rounded-md imageshop:hover:bg-accent/40 imageshop:hover:text-black imageshop:cursor-pointer imageshop:transition-colors">
 						{ __( 'Sync Imageshop images to the WordPress media library', 'imageshop-dam-connector' ) }
 					</button>
 				</Section>

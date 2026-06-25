@@ -3,7 +3,7 @@ import clsx from "clsx";
 
 export default function Sections({ children, className }) {
 	return (
-		<div className={clsx('grid grid-cols-1 gap-12', className)}>
+		<div className={clsx('imageshop:grid imageshop:grid-cols-1 imageshop:gap-12', className)}>
 			{children}
 		</div>
 	);
@@ -11,7 +11,7 @@ export default function Sections({ children, className }) {
 
 export function Section({ children, className }) {
 	return (
-		<div className={clsx('grid grid-cols-1 gap-4 w-full', className)}>
+		<div className={clsx('imageshop:grid imageshop:grid-cols-1 imageshop:gap-4 imageshop:w-full', className)}>
 			{children}
 		</div>
 	);
@@ -19,7 +19,7 @@ export function Section({ children, className }) {
 
 export function SectionHeader({ children, className }) {
 	return (
-		<div className={clsx('grid grid-cols-1 gap-2 pb-2', className)}>
+		<div className={clsx('imageshop:grid imageshop:grid-cols-1 imageshop:gap-2 imageshop:pb-2', className)}>
 			{children}
 		</div>
 	);
@@ -28,8 +28,8 @@ export function SectionHeader({ children, className }) {
 export function SectionTitle({ children, className, subtitle = false }) {
 	const classnames = clsx(
 		! subtitle
-			? 'text-lg font-semibold m-0! pb-2 border-b-1 border-accent/20'
-			: 'text-base! font-semibold m-0! pb-2',
+			? 'imageshop:text-lg imageshop:font-semibold imageshop:m-0! imageshop:pb-2 imageshop:border-b-1 imageshop:border-accent/20'
+			: 'imageshop:text-base! imageshop:font-semibold imageshop:m-0! imageshop:pb-2',
 		className
 	)
 
@@ -42,7 +42,7 @@ export function SectionTitle({ children, className, subtitle = false }) {
 
 export function SectionDescription({ children, className }) {
 	return (
-		<p className={clsx('text-sm text-gray-600 w-full max-w-3xl m-0!', className)}>
+		<p className={clsx('imageshop:text-sm imageshop:text-gray-600 imageshop:w-full imageshop:max-w-3xl imageshop:m-0!', className)}>
 			{children}
 		</p>
 	);

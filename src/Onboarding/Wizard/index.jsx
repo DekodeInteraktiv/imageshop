@@ -13,18 +13,18 @@ const Wizard = ( { setShowWizard, setShowNotice } ) => {
 
 	return (
 		<>
-			<div className="fixed top-0 left-0 z-[10000] inset-0 bg-gray-500/75 transition-opacity" />
+			<div className="imageshop:fixed imageshop:top-0 imageshop:left-0 imageshop:z-[10000] imageshop:inset-0 imageshop:bg-gray-500/75 imageshop:transition-opacity" />
 
-			<div className="fixed inset-0 z-[10010] w-screen overflow-y-auto">
-				<div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-					<dialog className="relative transform rounded-lg bg-white text-left sm:my-8 sm:w-full sm:max-w-lg" open>
-						<button type="button" className="absolute -right-7 -top-7 bg-transparent border-none text-primary hover:text-accent z-[10012] cursor-pointer" onClick={ () => setShowWizard( false ) }>
-							<XCircleIcon className="inline-block w-8 h-8" />
+			<div className="imageshop:fixed imageshop:inset-0 imageshop:z-[10010] imageshop:w-screen imageshop:overflow-y-auto">
+				<div className="imageshop:flex imageshop:min-h-full imageshop:items-end imageshop:justify-center imageshop:p-4 imageshop:text-center imageshop:sm:items-center imageshop:sm:p-0">
+					<dialog className="imageshop:relative imageshop:transform imageshop:rounded-lg imageshop:bg-white imageshop:text-left imageshop:sm:my-8 imageshop:sm:w-full imageshop:sm:max-w-lg" open>
+						<button type="button" className="imageshop:absolute imageshop:-right-7 imageshop:-top-7 imageshop:bg-transparent imageshop:border-none imageshop:text-primary imageshop:hover:text-accent imageshop:z-[10012] imageshop:cursor-pointer" onClick={ () => setShowWizard( false ) }>
+							<XCircleIcon className="imageshop:inline-block imageshop:w-8 imageshop:h-8" />
 							<span className="screen-reader-text">{ __( 'Close Imageshop setup modal', 'imageshop-dam-connector' ) }</span>
 						</button>
 
-						<div className="p-4 border-b border-gray-200">
-							<img src={ Logo } alt="ImageShop Logo" className="w-64 mx-auto" />
+						<div className="imageshop:p-4 imageshop:border-b imageshop:border-gray-200">
+							<img src={ Logo } alt="ImageShop Logo" className="imageshop:w-64 imageshop:mx-auto" />
 						</div>
 
 						<div className="imageshop-modal-body">
