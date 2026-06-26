@@ -101,6 +101,13 @@ class Attachment {
 		// Delete the stored metadata.
 		\delete_post_meta( $request->get_param( 'id' ), '_imageshop_media_sizes' );
 
+		// A manual flush is an explicit request for fresh data, so bypass both caches.
+		$document_id = \get_post_meta( $request->get_param( 'id' ), '_imageshop_document_id', true );
+		if ( ! empty( $document_id ) ) {
+			REST_Controller::get_instance()->delete_document_cache( $document_id );
+		}
+		$this->clear_attachment_unresolved( $request->get_param( 'id' ) );
+
 		// generate new metadata, which will also generate new permalinks as needed.
 		$this->generate_imageshop_metadata( get_post( $request->get_param( 'id' ) ) );
 
@@ -546,6 +553,11 @@ class Attachment {
 			return array();
 		}
 
+		// An unresolved document would otherwise trigger one API request per registered size.
+		if ( $this->is_attachment_unresolved( $attachment_id ) ) {
+			return array();
+		}
+
 		$max_srcset_image_width = apply_filters( 'max_srcset_image_width', 2048, $size_array );
 
 		foreach ( \wp_get_registered_image_subsizes() as $slug => $data ) {
@@ -774,11 +786,8 @@ class Attachment {
 			return $image;
 		}
 
-		/*
-		 * If the media has been attempted fetched previously, and we're still
-		 * waiting for Imageshop to process it, return the original image.
-		 */
-		if ( false !== \get_transient( '_imageshop_attachment_' . $attachment_id . '_processing' ) ) {
+		// Imageshop is still processing the source, or it could not be resolved; serve the original meanwhile.
+		if ( $this->is_attachment_unresolved( $attachment_id ) ) {
 			return $image;
 		}
 
@@ -933,8 +942,7 @@ class Attachment {
 				// Remove the still faulty metadata, as keeping it may lead to unintentional processing.
 				\delete_post_meta( $attachment_id, '_imageshop_media_sizes' );
 
-				// Set a value to prevent processing for 5 minutes to avoid unnecessary server strain while data is generated.
-				\set_transient( '_imageshop_attachment_' . $attachment_id . '_processing', 'processing', 5 * MINUTE_IN_SECONDS );
+				$this->mark_attachment_unresolved( $attachment_id );
 
 				return $image;
 			}
@@ -1059,6 +1067,9 @@ class Attachment {
 
 		// If no valid media object is returned for any reason, bail early.
 		if ( empty( $media ) || ! isset( $media->SubDocumentList ) ) { // / phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->SubDocumentList` are provided by the SaaS API.
+			// Nothing is persisted on this path, so throttle to avoid an API call on every render.
+			$this->mark_attachment_unresolved( $post->ID );
+
 			return $media_details;
 		}
 
@@ -1144,6 +1155,34 @@ class Attachment {
 
 	public function append_document( $document_id, $document_details ) {
 		$this->documents[ $document_id ] = $document_details;
+	}
+
+	/**
+	 * Flag an attachment whose Imageshop document could not be resolved.
+	 */
+	private function mark_attachment_unresolved( $attachment_id ): void {
+		\set_transient( $this->get_processing_transient_key( $attachment_id ), 'processing', 5 * \MINUTE_IN_SECONDS );
+	}
+
+	/**
+	 * Check if an attachment is currently flagged as unresolved.
+	 */
+	private function is_attachment_unresolved( $attachment_id ): bool {
+		return false !== \get_transient( $this->get_processing_transient_key( $attachment_id ) );
+	}
+
+	/**
+	 * Clear the unresolved flag for an attachment.
+	 */
+	private function clear_attachment_unresolved( $attachment_id ): void {
+		\delete_transient( $this->get_processing_transient_key( $attachment_id ) );
+	}
+
+	/**
+	 * Generate a unique transient key for tracking the processing state of an attachment.
+	 */
+	private function get_processing_transient_key( $attachment_id ): string {
+		return '_imageshop_attachment_' . $attachment_id . '_processing';
 	}
 
 	public static function get_document_original_file( $media, $fallback = array() ) {
@@ -1347,6 +1386,9 @@ class Attachment {
 
 		$media = $this->get_document( $document_id );
 		if ( empty( $media ) || ! isset( $media->SubDocumentList ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->SubDocumentList` is provided by the SaaS API.
+			// Throttle here too: the srcset filters resolve sizes without going through generate_imageshop_metadata().
+			$this->mark_attachment_unresolved( $attachment_id );
+
 			return null;
 		}
 
