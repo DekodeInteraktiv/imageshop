@@ -3,7 +3,7 @@ Tags: media library, media cdn, DAM
 Requires at least: 6.6
 Requires PHP: 7.2
 Tested up to: 7.0
-Stable tag: 1.6.0
+Stable tag: 1.6.1
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -41,6 +41,10 @@ We welcome both suggestions, discussions, and code! Check out the project source
 3. A view of the Imageshop advanced settings page.
 
 == Changelog ==
+
+= 1.6.1 (2026-07-10) ?
+* Bugfix: Fixed a bug that could lead to pixelated smaller images being upscaled when `theme.json` had a non-pixel value as `contentWidth`.
+* Bugfix: Fixed a race condition leading to duplicate API calls for images without an Imageship ID associated with them.
 
 = 1.6.0 (2026-05-27) =
 * Feature: Introduced on-demand image permalinks, replacing the previous statically generated permalink variations for more flexible and up-to-date image URL handling.
