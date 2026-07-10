@@ -8,6 +8,10 @@ on:
                 description: 'Deploy plugin code from the built zip artifact'
                 type: boolean
                 required: true
+            version:
+                description: 'Plugin version being deployed (required when deploy_plugin is true)'
+                type: string
+                required: false
             dry_run:
                 description: 'Perform a dry run without committing to WordPress.org SVN'
                 type: boolean
@@ -58,6 +62,7 @@ jobs:
                   SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
                   SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
                   SLUG: imageshop-dam-connector
+                  VERSION: ${{ inputs.version }}
                   BUILD_DIR: ./plugin-build
                   ASSETS_DIR: .wordpress-org
 

@@ -66,5 +66,6 @@ jobs:
         uses: ./.github/workflows/wordpress-org-deploy.yml
         with:
             deploy_plugin: true
+            version: ${{ inputs.version }}
             dry_run: true
         secrets: inherit
