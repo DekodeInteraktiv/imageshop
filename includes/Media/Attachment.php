@@ -440,15 +440,27 @@ class Attachment {
 		// Priority: $content_width (classic themes / page builders) > theme.json contentSize (block themes) > max_srcset_image_width (fallback).
 		// Used below only when no theme filter on wp_calculate_image_sizes customised the result.
 		global $content_width;
-		$max_display_width = (int) $content_width;
+		$max_display_width     = (int) $content_width;
+		$max_display_width_css = $max_display_width > 0 ? sprintf( '%dpx', $max_display_width ) : '';
+
 		if ( 0 === $max_display_width && function_exists( 'wp_get_global_settings' ) ) {
-			$global_layout     = \wp_get_global_settings( array( 'layout' ) );
-			$max_display_width = isset( $global_layout['contentSize'] ) ? (int) $global_layout['contentSize'] : 0;
+			$global_layout = \wp_get_global_settings( array( 'layout' ) );
+			$content_size  = isset( $global_layout['contentSize'] ) ? $global_layout['contentSize'] : '';
+			$parsed_size   = self::parse_css_length( $content_size );
+
+			// Keep the unit as declared in theme.json (e.g. `rem`) rather than coercing it
+			// to a bare integer — `(int) "54rem"` silently truncates to `54`,
+			// instead of respecting the potential relative content width.
+			if ( null !== $parsed_size ) {
+				$max_display_width     = $parsed_size['px_equivalent'];
+				$max_display_width_css = $parsed_size['value'] . $parsed_size['unit'];
+			}
 		}
 		if ( 0 === $max_display_width ) {
 			// No content width declared — cap to max srcset width to avoid absurd sizes strings
 			// (e.g. "full" size at 3000px) when no theme or page builder hook overrides them.
-			$max_display_width = (int) apply_filters( 'max_srcset_image_width', 2048, $display_size );
+			$max_display_width     = (int) apply_filters( 'max_srcset_image_width', 2048, $display_size );
+			$max_display_width_css = sprintf( '%dpx', $max_display_width );
 		}
 
 		// Pass uncapped dimensions to wp_calculate_image_sizes so that theme/plugin filters
@@ -460,7 +472,7 @@ class Attachment {
 		// If no filter customised the result and the image is wider than the content column,
 		// apply the cap — do not expose the raw intrinsic image width as the layout width.
 		if ( $sizes_attr === $uncustomized_default && $display_size[0] > $max_display_width ) {
-			$sizes_attr = sprintf( '(max-width: %1$dpx) 100vw, %1$dpx', $max_display_width );
+			$sizes_attr = sprintf( '(max-width: %1$s) 100vw, %1$s', $max_display_width_css );
 		}
 
 		$sizes_str = ! empty( $sizes_attr ) ? $sizes_attr : $uncustomized_default;
@@ -731,6 +743,44 @@ class Attachment {
 		}
 
 		return $post_id;
+	}
+
+	/**
+	 * Parse a CSS length value (as used in theme.json layout settings) into a numeric
+	 * value, unit, and an approximate pixel equivalent usable for width comparisons.
+	 *
+	 * Only `px`, `em`, and `rem` are accepted, since these are the units theme.json
+	 * `contentSize`/`wideSize` values realistically use, and the only ones with a
+	 * well-defined approximate pixel equivalent that can be compared against an image's
+	 * intrinsic width without knowing the actual rendered root font size. Anything else
+	 * (viewport units, `calc()`, percentages, etc.) is rejected so callers fall back to
+	 * the `max_srcset_image_width` default instead of guessing.
+	 *
+	 * @param string $css_length A CSS length value, e.g. `"54rem"` or `"1200px"`.
+	 *
+	 * @return array{value: string, unit: string, px_equivalent: int}|null
+	 */
+	private static function parse_css_length( $css_length ) {
+		if ( ! is_string( $css_length ) || '' === trim( $css_length ) ) {
+			return null;
+		}
+
+		if ( ! preg_match( '/^(\d+(?:\.\d+)?)(px|r?em)$/', trim( $css_length ), $matches ) ) {
+			return null;
+		}
+
+		$value = $matches[1];
+		$unit  = $matches[2];
+
+		// Approximate root font size, used only to decide *whether* the cap applies —
+		// the original unit is preserved in the `sizes` value that actually gets emitted.
+		$assumed_px_per_em = 16;
+
+		return array(
+			'value'         => $value,
+			'unit'          => $unit,
+			'px_equivalent' => (int) round( 'px' === $unit ? (float) $value : (float) $value * $assumed_px_per_em ),
+		);
 	}
 
 	/**
