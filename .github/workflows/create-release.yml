@@ -67,5 +67,5 @@ jobs:
         with:
             deploy_plugin: true
             version: ${{ inputs.version }}
-            dry_run: true
+            dry_run: false
         secrets: inherit
