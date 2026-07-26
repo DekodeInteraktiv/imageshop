@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"devDependencies": {
 		"@heroicons/react": "^2.2.0",
-		"@tailwindcss/postcss": "^4.1.17",
+		"@tailwindcss/postcss": "^4.3.3",
 		"@wordpress/env": "^11.9.0",
 		"@wordpress/scripts": "^32.1.0",
 		"@wordpress/stylelint-config": "^23.12.0",
@@ -32,6 +32,6 @@
 	],
 	"dependencies": {
 		"clsx": "^2.1.1",
-		"postcss": "^8.5.3"
+		"postcss": "^8.5.23"
 	}
 }
