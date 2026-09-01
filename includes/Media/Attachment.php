@@ -1469,7 +1469,7 @@ class Attachment {
 			return null;
 		}
 
-		$filename = $this->get_attachment_filename( $attachment_id, $media->FileName ?? null ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FileName` is provided by the SaaS API.
+		$filename = $this->get_attachment_filename( $attachment_id, $media->FileName ?? null, $media->Name ?? null ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->FileName` and `$media->Name` are provided by the SaaS API.
 
 		return array(
 			'source_url' => sprintf( '%s__%s/%s', $base_url, $size_params['query'], $filename ),
@@ -1504,17 +1504,25 @@ class Attachment {
 		return $this->get_image_url_for_size( (int) reset( $attachments ), $width, $height, $crop );
 	}
 
-	private function get_attachment_filename( $attach_id, $filename = null ) {
+	private function get_attachment_filename( $attach_id, $filename = null, $title = null ) {
 		if ( empty( $filename ) ) {
 			$filename = \get_post_field( 'post_name', $attach_id );
 			$filename = basename( $filename );
 		}
 
+		// Determine the mime type and extension from the actual (Imageshop-provided) filename.
 		$file_type = \wp_check_filetype( $filename );
+		$file_ext  = \pathinfo( $filename, PATHINFO_EXTENSION );
 
-		// Strip the file extension (if it exists) from the filename, so that we can sanitize the name.
-		$file_ext = \pathinfo( $filename, PATHINFO_EXTENSION );
-		$filename = \pathinfo( $filename, PATHINFO_FILENAME );
+		/*
+		 * Prefer a human friendly title over the raw Imageshop filename, when one is set,
+		 * as titles are usually more descriptive and readable than the source filename.
+		 */
+		if ( ! empty( $title ) ) {
+			$filename = $title;
+		} else {
+			$filename = \pathinfo( $filename, PATHINFO_FILENAME );
+		}
 
 		/*
 		 * Trim long filenames.
