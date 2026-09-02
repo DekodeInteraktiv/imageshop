@@ -63,7 +63,7 @@ jobs:
                   SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
                   SLUG: imageshop-dam-connector
                   VERSION: ${{ inputs.version }}
-                  BUILD_DIR: ./plugin-build
+                  BUILD_DIR: ./plugin-build/imageshop-dam-connector
                   ASSETS_DIR: .wordpress-org
 
             # --- Assets/readme-only deploy (manual dispatch) ---
