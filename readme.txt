@@ -42,7 +42,7 @@ We welcome both suggestions, discussions, and code! Check out the project source
 
 == Changelog ==
 
-= 1.6.2 (2026-09-02) =
+= 1.6.2 & 1.6.3 (2026-09-02) =
 * Security: Ensure correct permissions are set when storing the Imageshop API key in the WordPress options table, to prevent unauthorized access.
 * Enhancement: Improved filename generation to give more user-friendly names to files presented in your content.
 * Enhancement: Added legacy styling for users not on WordPress 7.0 or later to properly display the media modal.
