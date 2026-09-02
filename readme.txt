@@ -42,6 +42,10 @@ We welcome both suggestions, discussions, and code! Check out the project source
 
 == Changelog ==
 
+= 1.6.2 (2026-09-02) =
+* Security: Ensure correct permissions are set when storing the Imageshop API key in the WordPress options table, to prevent unauthorized access.
+
+
 = 1.6.1 (2026-07-10) =
 * Bugfix: Fixed a bug that could lead to pixelated smaller images being upscaled when `theme.json` had a non-pixel value as `contentWidth`.
 * Bugfix: Fixed a race condition leading to duplicate API calls for images without an Imageship ID associated with them.

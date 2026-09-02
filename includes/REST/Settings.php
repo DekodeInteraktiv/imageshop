@@ -23,7 +23,9 @@ class Settings {
 			[
 				'methods'             => \WP_REST_Server::READABLE,
 				'callback'            => [ $this, 'get_settings' ],
-				'permission_callback' => '__return_true',
+				'permission_callback' => function() {
+					return current_user_can( 'manage_options' );
+				},
 			]
 		);
 
@@ -33,7 +35,9 @@ class Settings {
 			[
 				'methods'             => \WP_REST_Server::EDITABLE,
 				'callback'            => [ $this, 'update_settings' ],
-				'permission_callback' => '__return_true',
+				'permission_callback' => function() {
+					return current_user_can( 'manage_options' );
+				},
 			]
 		);
 	}
