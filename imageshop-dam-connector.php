@@ -10,7 +10,7 @@
  * Text Domain: imageshop-dam-connector
  * Domain Path: /languages
  * Requires PHP: 7.2
- * Requires at least: 6.6
+ * Requires at least: 6.7
  */
 
 declare( strict_types = 1 );

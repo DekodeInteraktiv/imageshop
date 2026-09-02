@@ -69,11 +69,16 @@ class Library {
 			$this->asset_version( 'assets/scripts/media-library-modal.js' )
 		);
 
+		$modal_file = 'media-modal.css';
+		if ( version_compare( wp_get_wp_version(), '7.0', '<' ) ) {
+			$modal_file = 'media-modal-pre-70.css';
+		}
+
 		\wp_enqueue_style(
 			'media-modal',
-			\plugins_url( '/assets/styles/media-modal.css', IMAGESHOP_PLUGIN_BASE_NAME ),
+			\plugins_url( '/assets/styles/' . $modal_file, IMAGESHOP_PLUGIN_BASE_NAME ),
 			array(),
-			$this->asset_version( 'assets/styles/media-modal.css' )
+			$this->asset_version( 'assets/styles/' . $modal_file )
 		);
 
 		\wp_localize_script(
