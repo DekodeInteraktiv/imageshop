@@ -205,6 +205,31 @@ class REST_Controller {
 	}
 
 	/**
+	 * Get the site URL to send to Imageshop as a hint for where a permalink is used.
+	 *
+	 * Imageshop's API gateway rejects (403) any request whose body contains
+	 * "localhost", as a blanket SSRF precaution. Local development environments
+	 * (wp-env, Local, etc.) commonly run on a `localhost` address, which would
+	 * otherwise cause every permalink registration to silently fail. Since this
+	 * hint is optional, it is safe to omit entirely for local/non-public sites.
+	 *
+	 * @return string
+	 */
+	private function get_optional_url_hint(): string {
+		if ( 'local' === \wp_get_environment_type() ) {
+			return '';
+		}
+
+		$host = \wp_parse_url( \site_url( '/' ), PHP_URL_HOST );
+
+		if ( empty( $host ) || 'localhost' === $host || \str_ends_with( $host, '.local' ) || \str_ends_with( $host, '.test' ) || \filter_var( $host, FILTER_VALIDATE_IP ) ) {
+			return '';
+		}
+
+		return \site_url( '/' );
+	}
+
+	/**
 	 * Perform a request against the Imageshop API.
 	 *
 	 * @param string $url  The API endpoint to request.
@@ -305,7 +330,7 @@ class REST_Controller {
 			'y2'              => 100,
 			'previewwidth'    => 100,
 			'previewheight'   => 100,
-			'optionalurlhint' => \site_url( '/' ),
+			'optionalurlhint' => $this->get_optional_url_hint(),
 		);
 
 		// A permalink token may not always be supplied, so append it where needed.
@@ -359,7 +384,7 @@ class REST_Controller {
 			'y2'              => 100,
 			'previewwidth'    => 100,
 			'previewheight'   => 100,
-			'optionalurlhint' => \site_url( '/' ),
+			'optionalurlhint' => $this->get_optional_url_hint(),
 		);
 
 		// A permalink token may not always be supplied, so append it where needed.
@@ -414,7 +439,7 @@ class REST_Controller {
 		$this->queued_permalinks[] = array(
 			'documentid'      => $document_id,
 			'subdocumentid'   => $subdocument_id,
-			'optionalurlhint' => \site_url( '/' ),
+			'optionalurlhint' => $this->get_optional_url_hint(),
 			'permalinktoken'  => $generated_uuid,
 		);
 
@@ -455,7 +480,7 @@ class REST_Controller {
 			'y2'              => 100,
 			'previewwidth'    => 100,
 			'previewheight'   => 100,
-			'optionalurlhint' => \site_url( '/' ),
+			'optionalurlhint' => $this->get_optional_url_hint(),
 			'permalinktoken'  => $generated_uuid,
 		);
 
