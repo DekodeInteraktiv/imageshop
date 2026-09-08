@@ -42,6 +42,9 @@ We welcome both suggestions, discussions, and code! Check out the project source
 
 == Changelog ==
 
+= 1.7.0 (TBD) =
+* Enhancement: Added support for native image cropping, creating a local copy of your cropped variation.
+
 = 1.6.2 & 1.6.3 (2026-09-02) =
 * Security: Ensure correct permissions are set when storing the Imageshop API key in the WordPress options table, to prevent unauthorized access.
 * Enhancement: Improved filename generation to give more user-friendly names to files presented in your content.

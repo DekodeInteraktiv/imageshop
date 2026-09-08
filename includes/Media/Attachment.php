@@ -29,6 +29,16 @@ class Attachment {
 	private $is_srcset_content_img_tag_disabled = 'no';
 
 	/**
+	 * Whether the current request is running WordPress core's "crop/edit image" REST
+	 * endpoint (`POST /wp/v2/media/{id}/edit`). Set by flag_image_edit_request(); consulted
+	 * by export_to_imageshop() so the attachment that endpoint creates is never uploaded to
+	 * Imageshop, before that attachment has any metadata of its own to check.
+	 *
+	 * @var bool
+	 */
+	private $is_editing_image_via_rest = false;
+
+	/**
 	 * Class constructor.
 	 */
 	public function __construct() {
@@ -42,6 +52,12 @@ class Attachment {
 			\add_filter( 'wp_content_img_tag', array( $this, 'validate_post_content_image_srcset' ), 10, 3 );
 
 			\add_filter( 'wp_get_attachment_caption', array( $this, 'get_attachment_caption' ), 10, 2 );
+
+			\add_filter( 'get_attached_file', array( $this, 'filter_virtual_attachment_file' ), 10, 2 );
+			\add_filter( 'get_post_metadata', array( $this, 'filter_virtual_attachment_metadata' ), 10, 4 );
+
+			\add_filter( 'rest_request_before_callbacks', array( $this, 'flag_image_edit_request' ), 10, 3 );
+			\add_filter( 'wp_edited_image_metadata', array( $this, 'flag_cropped_attachment_as_local_only' ), 10, 2 );
 
 			\add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
 
@@ -246,6 +262,150 @@ class Attachment {
 	 */
 	private function should_override_media( $attachment_id ) {
 		return $this->is_valid_attachment_type( $attachment_id ) && $this->is_valid_attachment_id( $attachment_id );
+	}
+
+	/**
+	 * Read this attachment's already-cached Imageshop size map, if any.
+	 *
+	 * Deliberately read-only: `generate_imageshop_metadata()` can make a live API call to
+	 * Imageshop to populate this cache, and both filters below run on the widely-fired
+	 * `get_attached_file`/`get_post_metadata` hooks, so triggering that from here could mean
+	 * an outbound HTTP request on any `wp_get_attachment_metadata()` call site-wide. We only
+	 * want to serve virtual-attachment data that has already been resolved elsewhere (e.g. by
+	 * rendering the attachment's thumbnail via `attachment_image_src()`).
+	 *
+	 * @param int $attachment_id Attachment ID.
+	 *
+	 * @return array|false
+	 */
+	private function get_cached_imageshop_media_sizes( $attachment_id ) {
+		$media_sizes = \get_post_meta( $attachment_id, '_imageshop_media_sizes', true );
+
+		if ( empty( $media_sizes['sizes']['original']['file'] ) ) {
+			return false;
+		}
+
+		return $media_sizes;
+	}
+
+	/**
+	 * Provide a synthetic `_wp_attached_file` value for virtual Imageshop attachments (media
+	 * picked directly from the Imageshop library, which have no local file or `_wp_attached_file`
+	 * meta - see should_override_media() usage throughout this class).
+	 *
+	 * Without this, core's `get_attached_file()` returns an empty string for these attachments,
+	 * which makes `wp_get_original_image_path()` fail and blocks the block editor's image-crop
+	 * REST endpoint (`WP_REST_Attachments_Controller::edit_media_item()`) with
+	 * "Unable to get meta information for file." before it ever attempts to load the image.
+	 *
+	 * The returned path never needs to exist on disk: WP's `_load_image_to_edit_path()` (see
+	 * wp-admin/includes/image.php) falls back to fetching the image over HTTP from
+	 * `wp_get_attachment_url()` - which this plugin already points at the Imageshop CDN via
+	 * `attachment_url()` - whenever `file_exists()` on the attached-file path returns false.
+	 *
+	 * @param string|false $file          The resolved attached file path, or empty if none stored.
+	 * @param int          $attachment_id Attachment ID.
+	 *
+	 * @return string|false
+	 */
+	public function filter_virtual_attachment_file( $file, $attachment_id ) {
+		if ( ! empty( $file ) || ! $this->should_override_media( $attachment_id ) ) {
+			return $file;
+		}
+
+		if ( ! \get_post_meta( $attachment_id, '_imageshop_document_id', true ) ) {
+			return $file;
+		}
+
+		$media_sizes = $this->get_cached_imageshop_media_sizes( $attachment_id );
+
+		if ( false === $media_sizes ) {
+			return $file;
+		}
+
+		return \trailingslashit( \wp_upload_dir()['basedir'] ) . 'imageshop-virtual-' . $attachment_id . '-' . $media_sizes['sizes']['original']['file'];
+	}
+
+	/**
+	 * Synthesize `_wp_attachment_metadata` for virtual Imageshop attachments, built from the
+	 * size data already cached in `_imageshop_media_sizes`.
+	 *
+	 * Without this, `wp_get_attachment_metadata()` returns false for these attachments (the
+	 * meta key is never written for them), which - together with filter_virtual_attachment_file()
+	 * above - blocks the block editor's image-crop REST endpoint before it attempts to load
+	 * the image. See that method's docblock for the full chain.
+	 *
+	 * `_wp_attachment_metadata` is read via `get_post_metadata`, not a dedicated filter, so this
+	 * has to short-circuit the meta read itself rather than post-process a return value. It
+	 * always checks for a genuinely-stored value first: an attachment can start out virtual and
+	 * later be fully imported locally (see Sync::do_import_batch_from_imageshop()), at which
+	 * point it has real `_wp_attachment_metadata` that must take precedence.
+	 *
+	 * @param mixed  $value     The value to return in place of the meta value, or null to let
+	 *                          WordPress read the stored value as usual.
+	 * @param int    $object_id Post ID.
+	 * @param string $meta_key  Meta key.
+	 * @param bool   $single    Whether to return a single value.
+	 *
+	 * @return mixed
+	 */
+	public function filter_virtual_attachment_metadata( $value, $object_id, $meta_key, $single ) {
+		if ( '_wp_attachment_metadata' !== $meta_key || ! $single || null !== $value ) {
+			return $value;
+		}
+
+		if ( ! $this->should_override_media( $object_id ) ) {
+			return $value;
+		}
+
+		if ( ! \get_post_meta( $object_id, '_imageshop_document_id', true ) ) {
+			return $value;
+		}
+
+		global $wpdb;
+		$already_stored = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT meta_id FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = '_wp_attachment_metadata' LIMIT 1",
+				$object_id
+			)
+		);
+
+		if ( $already_stored ) {
+			return $value;
+		}
+
+		$media_sizes = $this->get_cached_imageshop_media_sizes( $object_id );
+
+		if ( false === $media_sizes ) {
+			return $value;
+		}
+
+		$mime_type = \get_post_mime_type( $object_id );
+		$sizes     = array();
+
+		foreach ( $media_sizes['sizes'] as $size_name => $size_data ) {
+			if ( 'original' === $size_name || empty( $size_data['file'] ) ) {
+				continue;
+			}
+
+			$sizes[ $size_name ] = array(
+				'file'      => $size_data['file'],
+				'width'     => (int) $size_data['width'],
+				'height'    => (int) $size_data['height'],
+				'mime-type' => $mime_type,
+			);
+		}
+
+		$virtual_metadata = array(
+			'width'  => (int) $media_sizes['sizes']['original']['width'],
+			'height' => (int) $media_sizes['sizes']['original']['height'],
+			'file'   => $media_sizes['sizes']['original']['file'],
+			'sizes'  => $sizes,
+		);
+
+		// get_metadata() unwraps a single-value short-circuit with `$check[0]`, so the actual
+		// (array-shaped) meta value has to be wrapped in an outer array here.
+		return array( $virtual_metadata );
 	}
 
 	public function get_attachment_caption( $caption, $post_id ) {
@@ -705,6 +865,46 @@ class Attachment {
 	}
 
 	/**
+	 * Flags requests to WordPress core's "crop/edit image" REST endpoint
+	 * (`POST /wp/v2/media/{id}/edit`) so export_to_imageshop() can recognise the attachment
+	 * it goes on to create - before that attachment has any post meta of its own for
+	 * export_to_imageshop() to check. See flag_cropped_attachment_as_local_only() for the
+	 * durable, meta-based marker that covers every export attempt after this request.
+	 *
+	 * @param WP_REST_Response|WP_HTTP_Response|WP_Error|mixed $response Result to send, unmodified.
+	 * @param array                                             $handler  Route handler used for the request.
+	 * @param \WP_REST_Request                                  $request  Request used to generate the response.
+	 *
+	 * @return mixed Unmodified $response - this hook is only used as a signal.
+	 */
+	public function flag_image_edit_request( $response, $handler, $request ) {
+		if ( 'POST' === $request->get_method() && preg_match( '#^/wp/v2/media/\d+/edit$#', $request->get_route() ) ) {
+			$this->is_editing_image_via_rest = true;
+		}
+
+		return $response;
+	}
+
+	/**
+	 * Mark a freshly-cropped/edited attachment as never to be exported to Imageshop, even by
+	 * a later forced export.
+	 *
+	 * A crop or rotation applied through WordPress' own image editor is an explicit,
+	 * site-specific variant of the source image - if it belonged in the DAM, the user would
+	 * have created that variant there directly.
+	 *
+	 * @param array $new_image_meta    Meta data for the new image.
+	 * @param int   $new_attachment_id Attachment post ID for the new (cropped) image.
+	 *
+	 * @return array Unmodified $new_image_meta.
+	 */
+	public function flag_cropped_attachment_as_local_only( $new_image_meta, $new_attachment_id ) {
+		\update_post_meta( $new_attachment_id, '_imageshop_skip_export', 1 );
+
+		return $new_image_meta;
+	}
+
+	/**
 	 * Export an attachment to Imageshop.
 	 *
 	 * @param int  $post_id The attachment ID to export to Imageshop.
@@ -713,6 +913,12 @@ class Attachment {
 	 * @return false|mixed
 	 */
 	public function export_to_imageshop( $post_id, $force = false ) {
+		// Never export a local crop/edit of an existing image - see flag_image_edit_request()
+		// and flag_cropped_attachment_as_local_only() for how both are set.
+		if ( $this->is_editing_image_via_rest || \get_post_meta( $post_id, '_imageshop_skip_export', true ) ) {
+			return $post_id;
+		}
+
 		// If automated uploading of documents to Imageshop is disabled, bail early.
 		$upload_to_imageshop = \get_option( 'imageshop_upload_to_imageshop', 'no' );
 		if ( 'yes' !== $upload_to_imageshop && 'force' !== $force ) {
@@ -1610,6 +1816,14 @@ class Attachment {
 	 *
 	 * The URL to an attachment may be called directly at various points in the process, so filter it as well.
 	 *
+	 * Prefers the `full` size (scaled to WordPress' `big_image_size_threshold`, 2560px by
+	 * default) over `original` (the true, unscaled source image), matching how
+	 * `wp_get_attachment_url()` behaves for a regular local upload: the "attached file" it
+	 * returns there is already the threshold-scaled version, not the raw upload. Code that
+	 * calls `wp_get_attachment_url()` - core's block-editor image-crop REST endpoint among
+	 * them - expects that size, not the full-resolution original, and downloading the wrong
+	 * one is a needless multi-megabyte fetch.
+	 *
 	 * @param string $url     The URL to the full sized image.
 	 * @param int    $post_id The ID for the attachment post.
 	 * @return string
@@ -1625,6 +1839,10 @@ class Attachment {
 		// Don't override if there is no Imageshop ID assocaition.
 		if ( ! $document_id ) {
 			return $url;
+		}
+
+		if ( ! empty( $media_meta['sizes']['full']['source_url'] ) ) {
+			return $media_meta['sizes']['full']['source_url'];
 		}
 
 		if ( ! isset( $media_meta['sizes']['original'] ) ) {
