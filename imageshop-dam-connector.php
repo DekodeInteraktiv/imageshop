@@ -3,14 +3,14 @@
  * Plugin Name: Imageshop DAM Connector
  * Plugin URI:
  * Description: Use the Imageshop media library as your companys one source for all media.
- * Version: 1.6.3
+ * Version: 1.7.0
  * Author: Imageshop
  * Author URI: https://imageshop.org
  * License: GPLv2
  * Text Domain: imageshop-dam-connector
  * Domain Path: /languages
- * Requires PHP: 7.2
- * Requires at least: 6.7
+ * Requires PHP: 7.4
+ * Requires at least: 7.1
  */
 
 declare( strict_types = 1 );

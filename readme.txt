@@ -1,9 +1,9 @@
 === Imageshop DAM Connector ===
 Tags: media library, media cdn, DAM
-Requires at least: 6.6
-Requires PHP: 7.2
-Tested up to: 7.0
-Stable tag: 1.6.3
+Requires at least: 7.1
+Requires PHP: 7.4
+Tested up to: 7.1
+Stable tag: 1.7.0
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,7 +42,7 @@ We welcome both suggestions, discussions, and code! Check out the project source
 
 == Changelog ==
 
-= 1.7.0 (TBD) =
+= 1.7.0 (2026-09-30) =
 * Enhancement: Added support for native image cropping, creating a local copy of your cropped variation.
 * Enhancement: Added support for custom CDN domains for users who have this set up.
 * Enhancement: Added more user-friendly feedback when validating settings.
