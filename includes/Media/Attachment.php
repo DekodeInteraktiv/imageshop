@@ -9,6 +9,7 @@ namespace Imageshop\WordPress\Media;
 
 use Imageshop\WordPress\API\REST_Controller;
 use Imageshop\WordPress\Imageshop;
+use Imageshop\WordPress\REST\Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	die();
@@ -62,6 +63,8 @@ class Attachment {
 			\add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
 
 			\add_filter( 'wp_calculate_image_srcset_meta', array( $this, 'disable_srcset_for_svg' ), 10, 3 );
+
+			\add_filter( 'the_content', array( self::class, 'apply_cdn_domain' ), 20, 1 );
 
 			$this->is_srcset_content_img_tag_disabled = \get_option( 'imageshop_disable_srcset', 'no' );
 		}
@@ -298,6 +301,10 @@ class Attachment {
 	 * REST endpoint (`WP_REST_Attachments_Controller::edit_media_item()`) with
 	 * "Unable to get meta information for file." before it ever attempts to load the image.
 	 *
+	 * Only applied during that request (see flag_image_edit_request()), as other core
+	 * features, such as `srcset` calculation, would otherwise treat the synthetic file as
+	 * existing in the local uploads directory.
+	 *
 	 * The returned path never needs to exist on disk: WP's `_load_image_to_edit_path()` (see
 	 * wp-admin/includes/image.php) falls back to fetching the image over HTTP from
 	 * `wp_get_attachment_url()` - which this plugin already points at the Imageshop CDN via
@@ -309,7 +316,7 @@ class Attachment {
 	 * @return string|false
 	 */
 	public function filter_virtual_attachment_file( $file, $attachment_id ) {
-		if ( ! empty( $file ) || ! $this->should_override_media( $attachment_id ) ) {
+		if ( ! $this->is_editing_image_via_rest || ! empty( $file ) || ! $this->should_override_media( $attachment_id ) ) {
 			return $file;
 		}
 
@@ -333,7 +340,8 @@ class Attachment {
 	 * Without this, `wp_get_attachment_metadata()` returns false for these attachments (the
 	 * meta key is never written for them), which - together with filter_virtual_attachment_file()
 	 * above - blocks the block editor's image-crop REST endpoint before it attempts to load
-	 * the image. See that method's docblock for the full chain.
+	 * the image. See that method's docblock for the full chain, and why this is limited to
+	 * the image edit request.
 	 *
 	 * `_wp_attachment_metadata` is read via `get_post_metadata`, not a dedicated filter, so this
 	 * has to short-circuit the meta read itself rather than post-process a return value. It
@@ -350,7 +358,7 @@ class Attachment {
 	 * @return mixed
 	 */
 	public function filter_virtual_attachment_metadata( $value, $object_id, $meta_key, $single ) {
-		if ( '_wp_attachment_metadata' !== $meta_key || ! $single || null !== $value ) {
+		if ( ! $this->is_editing_image_via_rest || '_wp_attachment_metadata' !== $meta_key || ! $single || null !== $value ) {
 			return $value;
 		}
 
@@ -743,7 +751,7 @@ class Attachment {
 				continue;
 			}
 
-			$srcset_meta['entries'][] = sprintf( '%s %dw', $size_data['source_url'], $size_data['width'] );
+			$srcset_meta['entries'][] = sprintf( '%s %dw', self::apply_cdn_domain( $size_data['source_url'] ), $size_data['width'] );
 
 			if ( $size_data['width'] > $srcset_meta['widest'] ) {
 				$srcset_meta['widest'] = $size_data['width'];
@@ -1203,6 +1211,8 @@ class Attachment {
 				return $image;
 			}
 		}
+
+		$data['source_url'] = self::apply_cdn_domain( $data['source_url'] );
 
 		return \array_merge(
 			array(
@@ -1842,14 +1852,42 @@ class Attachment {
 		}
 
 		if ( ! empty( $media_meta['sizes']['full']['source_url'] ) ) {
-			return $media_meta['sizes']['full']['source_url'];
+			return self::apply_cdn_domain( $media_meta['sizes']['full']['source_url'] );
 		}
 
 		if ( ! isset( $media_meta['sizes']['original'] ) ) {
 			return $url;
 		}
 
-		return $media_meta['sizes']['original']['source_url'];
+		return self::apply_cdn_domain( $media_meta['sizes']['original']['source_url'] );
+	}
+
+	/**
+	 * Replace the default Imageshop CDN host with the configured custom CDN domain.
+	 *
+	 * URLs are always stored using the default host, and swapped at output time, so that
+	 * changing the CDN domain never requires stored data to be flushed or rewritten.
+	 *
+	 * @param string|mixed $content A URL, or markup containing URLs.
+	 *
+	 * @return string|mixed
+	 */
+	public static function apply_cdn_domain( $content ) {
+		if ( ! \is_string( $content ) || '' === $content ) {
+			return $content;
+		}
+
+		$cdn_domain = \untrailingslashit( (string) Settings::get( 'cdn_domain' ) );
+
+		if ( empty( $cdn_domain ) || REST_Controller::IMAGESHOP_CDN_PREFIX === $cdn_domain ) {
+			return $content;
+		}
+
+		return \str_replace(
+			\trailingslashit( REST_Controller::IMAGESHOP_CDN_PREFIX ),
+			\trailingslashit( $cdn_domain ),
+			$content
+		);
 	}
 
 	/**

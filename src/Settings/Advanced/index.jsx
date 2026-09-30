@@ -36,7 +36,31 @@ export default function Advanced( { settings, updateSettings } ) {
 							</span>
 						</label>
 					</div>
+				</Section>
 
+				<Section>
+					<SectionHeader>
+						<SectionTitle>
+							{ __( 'Custom CDN domain', 'imageshop-dam-connector' ) }
+						</SectionTitle>
+						<SectionDescription>
+							{ __( 'A custom CDN domain lets you serve images from a branded link, for example %%s instead of v.imgi.no.', 'imageshop-dam-connector' ) }
+						</SectionDescription>
+					</SectionHeader>
+
+					<div className="imageshop:grid imageshop:grid-cols-1 imageshop:gap-2">
+						<label htmlFor="cdn_domain">{ __( 'Domain:', 'imageshop-dam-connector' ) }</label>
+						<div className="imageshop:grid imageshop:grid-cols-1 imageshop:gap-1">
+							<input
+								type="text"
+								placeholder={ __( 'https://v.imgi.no', 'imageshop-dam-connector' ) }
+								className="imageshop:w-full"
+								id="cdn_domain"
+								value={ settings.cdn_domain }
+								onChange={ ( event ) => updateSettings( { cdn_domain: event.target.value } ) }
+							/>
+						</div>
+					</div>
 				</Section>
 
 				<Section>

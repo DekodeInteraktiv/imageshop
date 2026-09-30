@@ -16,6 +16,7 @@ import {
 } from "@heroicons/react/24/solid";
 
 import Logo from '../../assets/images/logo.svg';
+import clsx from "clsx";
 
 const tabs = {
 	settings: {
@@ -37,6 +38,7 @@ export default function Settings() {
 	const [ settings, setSettings ] = useState( {} );
 	const [ saveNotice, setSaveNotice ] = useState( null );
 	const [ showSharedFooter, setShowSharedFooter ] = useState( true );
+	const [ failureNotice, setFailureNotice ] = useState( [] );
 
 	const updateSettings = ( newSettings ) => {
 		setSettings(
@@ -48,6 +50,8 @@ export default function Settings() {
 	}
 
 	const saveSettings = () => {
+		setFailureNotice( [] );
+
 		apiFetch(
 			{
 				path: 'imageshop/v1/settings',
@@ -58,6 +62,7 @@ export default function Settings() {
 					disable_srcset: settings.disable_srcset,
 					webp_support: settings.webp_support,
 					upload_to_imageshop: settings.upload_to_imageshop,
+					cdn_domain: settings.cdn_domain,
 				}
 			}
 		).then( ( response ) => {
@@ -67,6 +72,16 @@ export default function Settings() {
 			setTimeout( () => {
 				setSaveNotice( null );
 			}, 5000 );
+		} ).catch( ( error ) => {
+			if ( error?.data?.details ) {
+				let failures = [];
+				for ( const [ key, value ] of Object.entries( error.data.details ) ) {
+					failures.push( value.message );
+				}
+				setFailureNotice( failures );
+			} else if ( error?.message ) {
+				setFailureNotice( error.message );
+			}
 		} );
 	}
 
@@ -111,6 +126,26 @@ export default function Settings() {
 										<p className="imageshop:shadow-lg imageshop:border-1 imageshop:border-primary imageshop:bg-white imageshop:p-4 imageshop:rounded-md imageshop:text-primary imageshop:flex imageshop:items-center">
 											<InformationCircleIcon className="imageshop:inline-block imageshop:w-6 imageshop:h-6 imageshop:mr-2 imageshop:text-primary" />
 											{ saveNotice }
+										</p>
+									) }
+
+									{ failureNotice.length > 0 && (
+										<p className={ clsx(
+											"imageshop:shadow-lg imageshop:border-1 imageshop:border-error imageshop:bg-white imageshop:p-4 imageshop:rounded-md imageshop:text-error imageshop:flex",
+											failureNotice.length > 1 && "imageshop:items-start",
+											failureNotice.length < 2 && "imageshop:items-center"
+										) }>
+											<InformationCircleIcon className="imageshop:inline-block imageshop:w-6 imageshop:h-6 imageshop:mr-2 imageshop:text-error" />
+											{ failureNotice.length < 2
+												? failureNotice[0]
+												: <>
+													<ul>
+														{ failureNotice.map( ( error, index ) => (
+															<li key={ index }>{ error }<br /></li>
+														) ) }
+													</ul>
+												</>
+											}
 										</p>
 									) }
 
