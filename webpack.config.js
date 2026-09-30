@@ -7,4 +7,8 @@ module.exports = {
 		onboarding: './src/onboarding.jsx',
 		settings: './src/settings.jsx',
 	},
+	optimization: {
+		...defaultConfig.optimization,
+		runtimeChunk: false,
+	},
 };
