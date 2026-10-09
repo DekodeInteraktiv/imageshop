@@ -1,4 +1,4 @@
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import Sections, {Section, SectionDescription, SectionHeader, SectionTitle} from "../../components/Sections";
 
 export default function Advanced( { settings, updateSettings } ) {
@@ -44,7 +44,11 @@ export default function Advanced( { settings, updateSettings } ) {
 							{ __( 'Custom CDN domain', 'imageshop-dam-connector' ) }
 						</SectionTitle>
 						<SectionDescription>
-							{ __( 'A custom CDN domain lets you serve images from a branded link, for example %%s instead of v.imgi.no.', 'imageshop-dam-connector' ) }
+							{ sprintf(
+								/* translators: %s is the custom domain example */
+								__( 'A custom CDN domain lets you serve images from a branded link, for example %s instead of v.imgi.no.', 'imageshop-dam-connector' ),
+								'https://yourdomain.com'
+							) }
 						</SectionDescription>
 					</SectionHeader>
 
