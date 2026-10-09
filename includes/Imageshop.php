@@ -6,13 +6,14 @@ namespace Imageshop\WordPress;
 
 use Imageshop\WordPress\Admin\Dashboard;
 use Imageshop\WordPress\Admin\Onboarding;
-use Imageshop\WordPress\Media\Attachment;
+use Imageshop\WordPress\Compatibility\AdvancedCustomFields;
 use Imageshop\WordPress\Compatibility\Polylang;
+use Imageshop\WordPress\Media\Attachment;
 use Imageshop\WordPress\Media\Insert;
-use Imageshop\WordPress\REST\Helpers;
 use Imageshop\WordPress\Media\Library;
 use Imageshop\WordPress\Media\MimeTypes;
 use Imageshop\WordPress\Media\Search;
+use Imageshop\WordPress\REST\Helpers;
 use Imageshop\WordPress\REST\Settings;
 use Imageshop\WordPress\Sync\Sync;
 
@@ -52,6 +53,7 @@ class Imageshop {
 
 	public function compatibility() {
 		new Polylang();
+		new AdvancedCustomFields();
 	}
 
 	public static function available_locales(): array {
