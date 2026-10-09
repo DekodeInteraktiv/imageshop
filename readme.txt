@@ -3,7 +3,7 @@ Tags: media library, media cdn, DAM
 Requires at least: 7.1
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 1.7.0
+Stable tag: 1.7.1
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -41,6 +41,11 @@ We welcome both suggestions, discussions, and code! Check out the project source
 3. A view of the Imageshop advanced settings page.
 
 == Changelog ==
+
+= 1.7.1 (2026-10-09) =
+* Bugfix: Fixed a bug where some cropped images might show up in `srcset` with the wrong dimensions, leading to incorrect cropped variants sometimes being visible.
+* Enhancement: Added compatibility support for ACF version 6.8.7 or newer.
+* Translations: Fixed an incorrect translatable string.
 
 = 1.7.0 (2026-09-30) =
 * Enhancement: Added support for native image cropping, creating a local copy of your cropped variation.
