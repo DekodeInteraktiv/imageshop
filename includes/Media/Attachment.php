@@ -567,7 +567,17 @@ class Attachment {
 			);
 		}
 
-		$srcset_meta = $this->generate_attachment_srcset( $attachment_id, $size_slug );
+		// The CDN src URL (__w=N_h=M) holds the actual output dimensions, and with them the displayed aspect ratio.
+		preg_match( '/__w=(\d+)(?:_h=(\d+))?/', $attachment_image_src_url, $cdn_dims );
+
+		$srcset_meta = $this->generate_attachment_srcset(
+			$attachment_id,
+			$size_slug,
+			array(
+				! empty( $cdn_dims[1] ) ? (int) $cdn_dims[1] : 0,
+				! empty( $cdn_dims[2] ) ? (int) $cdn_dims[2] : 0,
+			)
+		);
 
 		if ( empty( $srcset_meta ) ) {
 			return $filtered_image;
@@ -588,7 +598,6 @@ class Attachment {
 		// Virtual attachments have no _wp_attachment_metadata, so WP cannot add width/height attrs.
 		// Parse from the CDN src URL (__w=N_h=M) as the most reliable source for our attachments,
 		// then fall back to <img> width/height attrs (standard WP), then registered size slug.
-		preg_match( '/__w=(\d+)(?:_h=(\d+))?/', $attachment_image_src_url, $cdn_dims );
 		if ( ! empty( $cdn_dims[1] ) ) {
 			$display_size = array( (int) $cdn_dims[1], ! empty( $cdn_dims[2] ) ? (int) $cdn_dims[2] : 0 );
 		} else {
@@ -715,12 +724,17 @@ class Attachment {
 	/**
 	 * Generate the `srcset` and related attribute data for an `img` tag.
 	 *
-	 * @param int    $attachment_id Attachment post ID.
-	 * @param string $size          The size slug for the size requested.
+	 * Only sizes matching the aspect ratio of the displayed image are included, mirroring
+	 * core's `wp_calculate_image_srcset()`, so the browser never swaps a hard-cropped
+	 * variant (e.g. a square thumbnail) in for a differently proportioned image.
+	 *
+	 * @param int          $attachment_id Attachment post ID.
+	 * @param string|int[] $size          The size slug, or width/height array, for the size requested.
+	 * @param int[]        $display_size  Optional. Actual width/height of the displayed image, when known.
 	 *
 	 * @return array
 	 */
-	private function generate_attachment_srcset( $attachment_id, $size ) {
+	private function generate_attachment_srcset( $attachment_id, $size, $display_size = array() ) {
 		$srcset_meta = array(
 			'entries' => array(),
 			'widest'  => 0,
@@ -738,6 +752,8 @@ class Attachment {
 			return array();
 		}
 
+		$reference_size = $this->get_srcset_reference_size( $attachment_id, $size, $display_size );
+
 		$max_srcset_image_width = apply_filters( 'max_srcset_image_width', 2048, $size_array );
 
 		foreach ( \wp_get_registered_image_subsizes() as $slug => $data ) {
@@ -751,14 +767,73 @@ class Attachment {
 				continue;
 			}
 
-			$srcset_meta['entries'][] = sprintf( '%s %dw', self::apply_cdn_domain( $size_data['source_url'] ), $size_data['width'] );
+			// Skip sizes with a different aspect ratio, such as hard crops of a differently proportioned image.
+			if ( null !== $reference_size && ! \wp_image_matches_ratio( $reference_size[0], $reference_size[1], $size_data['width'], $size_data['height'] ) ) {
+				continue;
+			}
+
+			// Each width descriptor may only appear once in a valid `srcset`.
+			if ( isset( $srcset_meta['entries'][ $size_data['width'] ] ) ) {
+				continue;
+			}
+
+			$srcset_meta['entries'][ $size_data['width'] ] = sprintf( '%s %dw', self::apply_cdn_domain( $size_data['source_url'] ), $size_data['width'] );
 
 			if ( $size_data['width'] > $srcset_meta['widest'] ) {
 				$srcset_meta['widest'] = $size_data['width'];
 			}
 		}
 
+		if ( empty( $srcset_meta['entries'] ) ) {
+			return array();
+		}
+
+		\ksort( $srcset_meta['entries'] );
+		$srcset_meta['entries'] = \array_values( $srcset_meta['entries'] );
+
 		return $srcset_meta;
+	}
+
+	/**
+	 * Resolve the dimensions whose aspect ratio `srcset` candidates must match.
+	 *
+	 * @param int          $attachment_id Attachment post ID.
+	 * @param string|int[] $size          The size slug, or width/height array, for the size requested.
+	 * @param int[]        $display_size  Actual width/height of the displayed image, when known.
+	 *
+	 * @return int[]|null Width/height pair, or null if no reference could be determined.
+	 */
+	private function get_srcset_reference_size( $attachment_id, $size, $display_size ) {
+		if ( ! empty( $display_size[0] ) && ! empty( $display_size[1] ) ) {
+			return array( (int) $display_size[0], (int) $display_size[1] );
+		}
+
+		if ( \is_array( $size ) && ! empty( $size[0] ) && ! empty( $size[1] ) ) {
+			return array( (int) $size[0], (int) $size[1] );
+		}
+
+		// Registered sizes may be soft crops, so resolve the dimensions actually produced for this image.
+		$registered_sizes = \wp_get_registered_image_subsizes();
+		if ( \is_string( $size ) && isset( $registered_sizes[ $size ] ) ) {
+			$size_data = $this->get_image_url_for_size(
+				$attachment_id,
+				$registered_sizes[ $size ]['width'],
+				$registered_sizes[ $size ]['height'],
+				$registered_sizes[ $size ]['crop'] ?? false
+			);
+
+			if ( ! empty( $size_data['width'] ) && ! empty( $size_data['height'] ) ) {
+				return array( $size_data['width'], $size_data['height'] );
+			}
+		}
+
+		// Fall back to the original image, as used for `full` or unknown sizes.
+		$original_image = $this->get_attachment_original_image( $attachment_id );
+		if ( null === $original_image || 0 === $original_image['width'] || 0 === $original_image['height'] ) {
+			return null;
+		}
+
+		return array( $original_image['width'], $original_image['height'] );
 	}
 
 	/**
@@ -1628,23 +1703,13 @@ class Attachment {
 	}
 
 	/**
-	 * Generate an on-demand CDN URL for a specific image size.
+	 * Resolve the Imageshop document and original image dimensions for an attachment.
 	 *
-	 * Retrieves the original image permalink once (caching it in post meta) and appends
-	 * CDN size/crop parameters for cloud-based on-demand resizing.
+	 * @param int $attachment_id WordPress attachment ID.
 	 *
-	 * @param int  $attachment_id WordPress attachment ID.
-	 * @param int  $width         Requested width in pixels (0 = derive from height).
-	 * @param int  $height        Requested height in pixels (0 = derive from width).
-	 * @param bool $crop          Whether the image should be hard-cropped to exact dimensions.
-	 *
-	 * @return array|null Array with keys source_url, width, height, file — or null if unable to generate.
+	 * @return array|null Array with keys document_id, media, width, height — or null if unable to resolve.
 	 */
-	public function get_image_url_for_size( $attachment_id, $width, $height, $crop = false ) {
-		if ( 0 === (int) $width && 0 === (int) $height ) {
-			return null;
-		}
-
+	private function get_attachment_original_image( $attachment_id ) {
 		$document_id = \get_post_meta( $attachment_id, '_imageshop_document_id', true );
 		if ( empty( $document_id ) ) {
 			return null;
@@ -1669,12 +1734,46 @@ class Attachment {
 			$original_image->Height = $dimensions['height']; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is provided by the SaaS API.
 		}
 
+		return array(
+			'document_id' => $document_id,
+			'media'       => $media,
+			'width'       => (int) $original_image->Width, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is provided by the SaaS API.
+			'height'      => (int) $original_image->Height, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is provided by the SaaS API.
+		);
+	}
+
+	/**
+	 * Generate an on-demand CDN URL for a specific image size.
+	 *
+	 * Retrieves the original image permalink once (caching it in post meta) and appends
+	 * CDN size/crop parameters for cloud-based on-demand resizing.
+	 *
+	 * @param int  $attachment_id WordPress attachment ID.
+	 * @param int  $width         Requested width in pixels (0 = derive from height).
+	 * @param int  $height        Requested height in pixels (0 = derive from width).
+	 * @param bool $crop          Whether the image should be hard-cropped to exact dimensions.
+	 *
+	 * @return array|null Array with keys source_url, width, height, file — or null if unable to generate.
+	 */
+	public function get_image_url_for_size( $attachment_id, $width, $height, $crop = false ) {
+		if ( 0 === (int) $width && 0 === (int) $height ) {
+			return null;
+		}
+
+		$original_image = $this->get_attachment_original_image( $attachment_id );
+		if ( null === $original_image ) {
+			return null;
+		}
+
+		$document_id = $original_image['document_id'];
+		$media       = $original_image['media'];
+
 		$size_params = $this->build_image_size_params(
 			(int) $width,
 			(int) $height,
 			(bool) $crop,
-			$original_image->Width, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is provided by the SaaS API.
-			$original_image->Height // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is provided by the SaaS API.
+			$original_image['width'],
+			$original_image['height']
 		);
 		if ( null === $size_params ) {
 			return null;
