@@ -12,6 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use Imageshop\WordPress\Media\Attachment;
+use Imageshop\WordPress\Sync\Progress;
 
 class Media {
 
@@ -140,7 +141,9 @@ class Media {
 
 		$progress = \WP_CLI\Utils\make_progress_bar( 'Exporting attachments', count( $attachments ) );
 
-		foreach ( $attachments as $attachment ) {
+		Progress::start( 'export', count( $attachments ), 'cli' );
+
+		foreach ( $attachments as $index => $attachment ) {
 			if ( $this->verbose ) {
 				\WP_CLI::log( sprintf( 'Processing attachment with ID %d', $attachment->ID ) );
 			}
@@ -151,7 +154,21 @@ class Media {
 			}
 
 			$progress->tick();
+
+			// Report progress, and check for a stop request, once per batch.
+			if ( 0 === ( $index + 1 ) % 20 ) {
+				Progress::advance( 'export', 20 );
+
+				if ( Progress::is_stopped( 'export' ) ) {
+					$progress->finish();
+					\WP_CLI::warning( 'The export was stopped from the settings page.' );
+					return false;
+				}
+			}
 		}
+
+		Progress::advance( 'export', count( $attachments ) % 20 );
+		Progress::finish( 'export' );
 
 		$progress->finish();
 
@@ -204,7 +221,9 @@ class Media {
 
 		$progress = \WP_CLI\Utils\make_progress_bar( 'Exporting attachments', count( $attachments ) );
 
-		foreach ( $attachments as $attachment ) {
+		Progress::start( 'export', count( $attachments ), 'cli' );
+
+		foreach ( $attachments as $index => $attachment ) {
 			if ( $this->verbose ) {
 				\WP_CLI::log( sprintf( 'Processing attachment with ID %d', $attachment->ID ) );
 			}
@@ -215,7 +234,21 @@ class Media {
 			}
 
 			$progress->tick();
+
+			// Report progress, and check for a stop request, once per batch.
+			if ( 0 === ( $index + 1 ) % 20 ) {
+				Progress::advance( 'export', 20 );
+
+				if ( Progress::is_stopped( 'export' ) ) {
+					$progress->finish();
+					\WP_CLI::warning( 'The export was stopped from the settings page.' );
+					return false;
+				}
+			}
 		}
+
+		Progress::advance( 'export', count( $attachments ) % 20 );
+		Progress::finish( 'export' );
 
 		$progress->finish();
 

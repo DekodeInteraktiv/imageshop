@@ -12,6 +12,7 @@ use Imageshop\WordPress\Media\Attachment;
 use Imageshop\WordPress\Media\Insert;
 use Imageshop\WordPress\Media\Library;
 use Imageshop\WordPress\Media\MimeTypes;
+use Imageshop\WordPress\Media\Permalinks;
 use Imageshop\WordPress\Media\Search;
 use Imageshop\WordPress\REST\Helpers;
 use Imageshop\WordPress\REST\Settings;
@@ -42,6 +43,7 @@ class Imageshop {
 
 		new MimeTypes();
 		Attachment::get_instance();
+		Permalinks::get_instance();
 		new Library();
 		new Onboarding();
 		new Search();

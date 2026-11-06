@@ -34,6 +34,10 @@ The Imageshop DAM plugin replaces any need for media management plugins, as it p
 
 We welcome both suggestions, discussions, and code! Check out the project source at https://github.com/DekodeInteraktiv/imageshop
 
+= Do you have WP-CLI support? =
+
+Yes, all long-running tasks are available via the `wp imageshhop` command. You can see all available commands by running `wp imageshop help`.
+
 == Screenshots ==
 
 1. The default WordPress media library, extended with Imageshop and showing results form your image bank.
@@ -41,6 +45,12 @@ We welcome both suggestions, discussions, and code! Check out the project source
 3. A view of the Imageshop advanced settings page.
 
 == Changelog ==
+
+= 1.8.0 (TBD) =
+* Enhancement: Improved media library loading by not preparing certain image files until the user actively chooses to use them.
+* Enhancement: Added debug tools for regenerating media permalinks.
+* Enhancement: Added longer waits for the Imageshop API to respond when regenerating media permalinks, to avoid timeouts and potential media files becoming invalid after 1 week (the AWS link lifetime).
+* Enhancement: Added a new CLI command to revalidate permalinks.
 
 = 1.7.1 (2026-10-09) =
 * Bugfix: Fixed a bug where some cropped images might show up in `srcset` with the wrong dimensions, leading to incorrect cropped variants sometimes being visible.
@@ -74,13 +84,3 @@ We welcome both suggestions, discussions, and code! Check out the project source
 * Enhancement: Versioned static assets to improve browser cache management across environments.
 * Bugfix: Media modal CSS effects now apply correctly on post-new.php in addition to post.php.
 * Compatibility: SVG srcset images now correctly handle varying attribute data types passed by third-party plugins.
-
-= 1.5.0 (2025-12-18) =
-* Media: Change the default setting for media uploads to not synchronize to Imageshop automatically, separating responsibilities.
-* Media: Made WebP conversion the default value for new installations.
-* Media: When deactivating the Imageshop integration, hide attachment references from the media library to create a better user experience.
-* Media: Add filter options for media types to the media library screen.
-* Media: Consistently display thumbnails for video files.
-* Media: Keep showing previews of non-image media when viewing media details in the media library.
-* Media Modal: Hide the media type filter from the modal inserter, as it is context aware and plays no role with the Imageshop plugin active.
-* Onboarding: Add notice to onboarding flow about the potential conflicts multiple media management plugins can have with each other.

@@ -54,6 +54,8 @@ class PluginStatus {
 	public static function register_deactivation_hook() {
 		global $wpdb;
 
+		\wp_clear_scheduled_hook( 'imageshop_process_permalinks' );
+
 		$wpdb->query(
 			'UPDATE
 				`' . $wpdb->posts . '` AS p

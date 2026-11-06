@@ -891,60 +891,75 @@ class Attachment {
 	}
 
 	/**
-	 * Retrieve and cache the base CDN URL for the original image of an attachment.
+	 * Get the complete permalink token for an attachment's original image.
+	 *
+	 * @param int $attachment_id WordPress attachment ID.
+	 * @param int $width         Original image width.
+	 * @param int $height        Original image height.
+	 *
+	 * @return string Token in the format `{site}-{attachment ID}-{hash}-{W}x{H}`.
+	 */
+	public function get_permalink_token( $attachment_id, $width, $height ): string {
+		return \sprintf( '%s-%dx%d', $this->get_attachment_permalink_token_base( $attachment_id ), $width, $height );
+	}
+
+	/**
+	 * Build the request needed to register the original image permalink of an attachment.
+	 *
+	 * @param int $attachment_id WordPress attachment ID.
+	 *
+	 * @return array|null The request (see Permalinks::remember_request()), or null if the document could not be resolved.
+	 */
+	public function get_permalink_request( $attachment_id ) {
+		$original_image = $this->get_attachment_original_image( $attachment_id );
+
+		if ( null === $original_image || 0 === $original_image['width'] || 0 === $original_image['height'] ) {
+			return null;
+		}
+
+		return Permalinks::get_instance()->remember_request(
+			$attachment_id,
+			$original_image['document_id'],
+			$original_image['width'],
+			$original_image['height'],
+			$this->get_permalink_token( $attachment_id, $original_image['width'], $original_image['height'] )
+		);
+	}
+
+	/**
+	 * Retrieve the base CDN URL for the original image of an attachment.
 	 *
 	 * The base URL is the registered original-size permalink: https://v.imgi.no/{token}-{W}x{H}.
 	 * On-demand sized variants are built by appending __w= / _h= parameters to this base.
-	 * The registration only happens once per attachment; existing registered URLs from the
-	 * legacy _imageshop_permalinks cache are reused to avoid duplicate registrations.
+	 *
+	 * Returns null, and queues the registration, until Imageshop has confirmed the permalink.
 	 *
 	 * @param int   $attachment_id WordPress attachment ID.
 	 * @param mixed $document_id   Imageshop document ID.
 	 *
-	 * @return string|null Base CDN URL (e.g. https://v.imgi.no/{token}-3000x2000), or null on failure.
+	 * @return string|null Base CDN URL (e.g. https://v.imgi.no/{token}-3000x2000), or null if not available yet.
 	 */
 	private function get_original_permalink_for_attachment( $attachment_id, $document_id ) {
-		$cached     = \get_post_meta( $attachment_id, '_imageshop_original_permalink', true );
+		$permalinks = Permalinks::get_instance();
+		$cached     = \get_post_meta( $attachment_id, Permalinks::META_URL, true );
 		$token_base = $this->get_attachment_permalink_token_base( $attachment_id );
 
 		// Validate any cached value actually contains our token (guards against stale data such
 		// as the internal-only /download URL that was previously stored here).
-		if ( ! empty( $cached ) && ! empty( $token_base ) && false !== strpos( $cached, $token_base ) ) {
+		if ( ! empty( $cached ) && ! empty( $token_base ) && false !== strpos( $cached, $token_base ) && $permalinks->is_available( $attachment_id ) ) {
 			return $cached;
 		}
 
-		$media = $this->get_document( $document_id );
-		if ( empty( $media ) || ! isset( $media->SubDocumentList ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->SubDocumentList` is provided by the SaaS API.
-			return null;
+		$request = $permalinks->get_request( $attachment_id );
+		if ( null === $request || 0 !== strpos( $request['token'], $token_base ) ) {
+			$request = $this->get_permalink_request( $attachment_id );
 		}
 
-		$original_image = self::get_document_original_file( $media );
-		if ( empty( $original_image ) ) {
-			return null;
+		if ( null !== $request ) {
+			$permalinks->queue( $attachment_id, $request );
 		}
 
-		if ( 0 === $original_image->Width || 0 === $original_image->Height ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` and `$original_image->Height` are provided by the SaaS API.
-			$dimensions             = $this->get_original_dimensions( $media->InterfaceList, $original_image ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->InterfaceList` is provided by the SaaS API.
-			$original_image->Width  = $dimensions['width']; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
-			$original_image->Height = $dimensions['height']; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
-		}
-
-		// Register the original at its full dimensions.
-		// The resulting CDN URL (https://v.imgi.no/{token}-{W}x{H}) becomes the base for
-		// all on-demand sized variants via __w= / _h= URL parameters.
-		$imageshop = REST_Controller::get_instance();
-		$base_url  = \untrailingslashit(
-			$imageshop->create_permalinks_url(
-				$document_id,
-				$original_image->Width, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Width` is provided by the SaaS API.
-				$original_image->Height, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_image->Height` is provided by the SaaS API.
-				$token_base
-			)
-		);
-
-		\update_post_meta( $attachment_id, '_imageshop_original_permalink', $base_url );
-
-		return $base_url;
+		return null;
 	}
 
 	/**
@@ -1449,8 +1464,15 @@ class Attachment {
 			}
 		}
 
+		if ( empty( $media_details['sizes']['original'] ) ) {
+			// No confirmed permalink yet, so don't cache an empty size map.
+			$this->mark_attachment_unresolved( $post->ID );
+
+			return array( 'sizes' => array() );
+		}
+
 		if ( ! isset( $media_details['sizes']['full'] ) ) {
-			$media_details['sizes']['full'] = $media_details['sizes']['original'] ?? null;
+			$media_details['sizes']['full'] = $media_details['sizes']['original'];
 		}
 
 		\update_post_meta( $post->ID, '_imageshop_media_sizes', $media_details );
@@ -1517,6 +1539,15 @@ class Attachment {
 	 */
 	private function clear_attachment_unresolved( $attachment_id ): void {
 		\delete_transient( $this->get_processing_transient_key( $attachment_id ) );
+	}
+
+	/**
+	 * Clear the unresolved flag for an attachment, so its sizes are resolved on the next request.
+	 *
+	 * @param int $attachment_id Attachment ID.
+	 */
+	public function clear_unresolved_state( $attachment_id ): void {
+		$this->clear_attachment_unresolved( $attachment_id );
 	}
 
 	/**

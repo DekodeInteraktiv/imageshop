@@ -9,10 +9,10 @@ import Account from "./Account";
 import Advanced from "./Advanced";
 import Sync from "./Sync";
 import {
-	ArrowPathIcon,
 	CpuChipIcon,
 	InformationCircleIcon,
-	WifiIcon
+	WifiIcon,
+	WrenchScrewdriverIcon
 } from "@heroicons/react/24/solid";
 
 import Logo from '../../assets/images/logo.svg';
@@ -28,8 +28,9 @@ const tabs = {
 		hasSharedFooter: true,
 	},
 	sync: {
-		label: <><ArrowPathIcon className="imageshop:inline-block imageshop:w-4 imageshop:h-4" /> <span>{ __( 'Full sync commands', 'imageshop-dam-connector' ) }</span></>,
+		label: <><WrenchScrewdriverIcon className="imageshop:inline-block imageshop:w-4 imageshop:h-4" /> <span>{ __( 'Debug tools', 'imageshop-dam-connector' ) }</span></>,
 		hasSharedFooter: false,
+		bottom: true,
 	},
 };
 

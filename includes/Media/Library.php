@@ -65,6 +65,7 @@ class Library {
 				'media-editor',
 				'media-views',
 				'wp-api-fetch',
+				'wp-a11y',
 			),
 			$this->asset_version( 'assets/scripts/media-library-modal.js' )
 		);
@@ -100,6 +101,10 @@ class Library {
 				'categories'        => $imageshop->get_categories( 0 ),
 				'languages'         => Imageshop::available_locales(),
 				'labels'            => array(
+					'prepare'    => array(
+						'preparing' => __( 'Preparing image…', 'imageshop-dam-connector' ),
+						'failed'    => __( 'The image could not be prepared by Imageshop. Please try again.', 'imageshop-dam-connector' ),
+					),
 					'origins'    => array(
 						'label'     => esc_html__( 'Media library source origin', 'imageshop-dam-connector' ),
 						'imageshop' => esc_html__( 'Search Imageshop', 'imageshop-dam-connector' ),
@@ -137,6 +142,7 @@ class Library {
 				'rest_url'          => array(
 					'update_metadata' => \rest_url( 'imageshop/v1/update-metadata' ),
 					'flush_cache'     => \rest_url( 'imageshop/v1/flush-cache' ),
+					'check_link'      => \rest_url( 'imageshop/v1/attachments/check' ),
 				),
 			)
 		);

@@ -36,6 +36,15 @@
 	text-align:right;
 }
 
+.media-modal .imageshop-actions {
+	clear: both;
+	padding-top: 8px;
+}
+
+.media-modal .imageshop-actions .button-link {
+	text-decoration: none;
+}
+
 .media-modal .imageshop-edit-form {
 	display: none;
 }

@@ -76,5 +76,7 @@ $wpdb->query( "DELETE FROM {$wpdb->posts} WHERE ID IN (" . \implode( ',', $remov
 $wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE post_id IN (" . \implode( ',', $removable ) . ')' ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- We need to implode a variable to use the `IN` SQL operator.
 $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '%imageshop%'" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- We are doing a non-variable query.
 
+\wp_clear_scheduled_hook( 'imageshop_process_permalinks' );
+
 // Flush the caches, necessary to prevent errant database values being kept in memory after removing the plugin.
 \wp_cache_flush();
