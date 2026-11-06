@@ -3,7 +3,7 @@ Tags: media library, media cdn, DAM
 Requires at least: 7.1
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 1.7.1
+Stable tag: 1.8.0
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -46,7 +46,7 @@ Yes, all long-running tasks are available via the `wp imageshhop` command. You c
 
 == Changelog ==
 
-= 1.8.0 (TBD) =
+= 1.8.0 (2026-11-06) =
 * Enhancement: Improved media library loading by not preparing certain image files until the user actively chooses to use them.
 * Enhancement: Added debug tools for regenerating media permalinks.
 * Enhancement: Added longer waits for the Imageshop API to respond when regenerating media permalinks, to avoid timeouts and potential media files becoming invalid after 1 week (the AWS link lifetime).
