@@ -9,6 +9,7 @@ namespace Imageshop\WordPress\Sync;
 
 use Imageshop\WordPress\API\REST_Controller;
 use Imageshop\WordPress\Media\Attachment;
+use Imageshop\WordPress\Media\Permalinks;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	die();
@@ -51,6 +52,49 @@ class Sync {
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'sync_local' ),
 				'permission_callback' => array( $this, 'user_can_sync' ),
+			)
+		);
+
+		\register_rest_route(
+			'imageshop/v1',
+			'tools/status',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_tools_status' ),
+				'permission_callback' => array( $this, 'user_can_sync' ),
+			)
+		);
+
+		\register_rest_route(
+			'imageshop/v1',
+			'tools/stop',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'stop_task' ),
+				'permission_callback' => array( $this, 'user_can_sync' ),
+				'args'                => array(
+					'task' => array(
+						'required' => true,
+						'type'     => 'string',
+						'enum'     => array( 'export', 'import', 'permalinks' ),
+					),
+				),
+			)
+		);
+
+		\register_rest_route(
+			'imageshop/v1',
+			'tools/check-links',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'check_links' ),
+				'permission_callback' => array( $this, 'user_can_sync' ),
+				'args'                => array(
+					'recheck' => array(
+						'type'    => 'boolean',
+						'default' => false,
+					),
+				),
 			)
 		);
 	}
@@ -135,9 +179,11 @@ class Sync {
 					'status'  => 'error',
 					'message' => \esc_html__( 'No images were found in the local WordPress media library, that needs to be imported to Imageshop.', 'imageshop-dam-connector' ),
 				),
-				204
+				200
 			);
 		}
+
+		Progress::start( 'export', \count( $ret ), 'web' );
 
 		$batchs = \array_chunk( $ret, 20 );
 		foreach ( $batchs as $posts ) {
@@ -188,12 +234,14 @@ class Sync {
 					'status'  => 'error',
 					'message' => \esc_html__( 'No documents were found in the active Imageshop interface, that needs to be imported to the local WordPress install.', 'imageshop-dam-connector' ),
 				),
-				204
+				200
 			);
 		}
 
 		$response = $this->prepare_response( $ret->DocumentList ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$ret->DocumentList` is defined by the SaaS API.
 		$batches  = \array_chunk( $response, 5 );
+
+		Progress::start( 'import', \count( $response ), 'web' );
 		foreach ( $batches as $documents ) {
 			\wp_schedule_single_event( \time() - 1, self::HOOK_IMPORT_IMAGESHOP_TO_WP, array( $documents ) );
 		}
@@ -217,6 +265,8 @@ class Sync {
 			$ret  = $rest->download( $document['DocumentID'] );
 			$this->execute_import_to_wp( $ret->Url, $document ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$ret->Url` is defined by the SaaS API.
 		}
+
+		Progress::advance( 'import', \count( $documents ) );
 	}
 
 	/**
@@ -301,6 +351,96 @@ class Sync {
 			// Add an arbitrary wait between requests.
 			sleep( 2 );
 		}
+
+		Progress::advance( 'export', \count( $posts ) );
+	}
+
+	/**
+	 * Get the progress of long-running tasks, and the state of stored permalinks.
+	 *
+	 * @return array
+	 */
+	public function get_tools_status() {
+		return array(
+			'tasks'      => array(
+				'export'     => Progress::get( 'export' ),
+				'import'     => Progress::get( 'import' ),
+				'permalinks' => Progress::get( 'permalinks' ),
+			),
+			'permalinks' => Permalinks::get_instance()->get_status_counts(),
+		);
+	}
+
+	/**
+	 * Stop a long-running task.
+	 *
+	 * @param \WP_REST_Request $request The REST request.
+	 *
+	 * @return \WP_REST_Response
+	 */
+	public function stop_task( \WP_REST_Request $request ) {
+		$task = $request->get_param( 'task' );
+
+		if ( 'export' === $task ) {
+			\wp_unschedule_hook( self::HOOK_IMPORT_WP_TO_IMAGESHOP );
+		} elseif ( 'import' === $task ) {
+			\wp_unschedule_hook( self::HOOK_IMPORT_IMAGESHOP_TO_WP );
+		} else {
+			\update_option( Permalinks::SWEEP_OPTION, 'stopped', false );
+		}
+
+		Progress::stop( $task );
+
+		return new \WP_REST_Response(
+			array(
+				'success' => true,
+				'status'  => 'success',
+				'message' => \esc_html__( 'The task has been stopped. A batch that is already running will be completed first.', 'imageshop-dam-connector' ),
+			),
+			200
+		);
+	}
+
+	/**
+	 * Start checking, and repairing, permalinks stored by earlier versions.
+	 *
+	 * @param \WP_REST_Request $request The request object.
+	 *
+	 * @return \WP_REST_Response
+	 */
+	public function check_links( \WP_REST_Request $request ) {
+		$progress = Progress::get( 'permalinks' );
+
+		if ( $progress && 'running' === $progress['status'] ) {
+			return new \WP_REST_Response(
+				array(
+					'success' => false,
+					'status'  => 'error',
+					'message' => \esc_html__( 'A previous check is still in progress, please wait for it to finish before starting another.', 'imageshop-dam-connector' ),
+				),
+				425
+			);
+		}
+
+		if ( 0 === Permalinks::get_instance()->start_legacy_sweep( (bool) $request->get_param( 'recheck' ) ) ) {
+			return new \WP_REST_Response(
+				array(
+					'success' => false,
+					'status'  => 'error',
+					'message' => \esc_html__( 'All image links have already been checked.', 'imageshop-dam-connector' ),
+				),
+				200
+			);
+		}
+
+		return new \WP_REST_Response(
+			array(
+				'success' => true,
+				'status'  => 'success',
+				'message' => \esc_html__( 'The check has been scheduled, and should start momentarily.', 'imageshop-dam-connector' ),
+			),
+			200
+		);
 	}
 
 	/**

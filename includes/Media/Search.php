@@ -372,7 +372,23 @@ class Search {
 		$full_size_url = null;
 		$image_sizes   = array();
 
-		if ( $media_file_type && \stristr( $media_file_type, 'image' ) ) {
+		// Only confirmed permalinks get CDN URLs, as the editor saves them into content. Other media
+		// shows Imageshop thumbnails until it is picked in the media modal.
+		$permalinks          = Permalinks::get_instance();
+		$is_image            = $media_file_type && \stristr( $media_file_type, 'image' );
+		$permalink_available = $is_image && $permalinks->is_available( $wp_post_id );
+
+		if ( $is_image && ! $permalink_available && $original_media->Width && $original_media->Height ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Width` and `$original_media->Height` are provided by the SaaS API.
+			$permalinks->remember_request(
+				$wp_post_id,
+				$media->DocumentID, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentID` is provided by the SaaS API.
+				$original_media->Width, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Width` is provided by the SaaS API.
+				$original_media->Height, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Height` is provided by the SaaS API.
+				$this->attachment->get_permalink_token( $wp_post_id, $original_media->Width, $original_media->Height ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Width` and `$original_media->Height` are provided by the SaaS API.
+			);
+		}
+
+		if ( $permalink_available ) {
 
 			if ( 'VECTOR' === $media->DocumentType ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->DocumentType` is provided by the SaaS API.
 				// For vector images, we need to get the full size URL differently.
@@ -510,6 +526,7 @@ class Search {
 			),
 			'orientation'           => ( $original_media->Height > $original_media->Width ? 'portrait' : 'landscape' ), // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$original_media->Height` and `$original_media->Width` are provided by the SaaS API.
 			'type'                  => ( $media->IsImage ? 'image' : ( $media->IsVideo ? 'video' : 'document' ) ), // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- `$media->IsImage` and `$media->IsVideo` are provided by the SaaS API.
+			'imageshopPending'      => ( $is_image && ! $permalink_available ),
 		);
 	}
 
@@ -687,15 +704,19 @@ class Search {
 
 			$output = sprintf(
 				'
-				<div class="imageshop-edit-toggle-wrapper">
-					<button type="button" class="button button-small button-link imageshop-flush-cache" data-imageshop-id="%d" data-flush-nonce="%s">%s</button>
-					<button type="button" class="button button-small button-link imageshop-edit-toggle-visibility">%s</button>
-				</div>
 				<div class="imageshop-ajax-generic-feedback notice"></div>
-				<div class="imageshop-edit-form">%s</div>',
+				<div class="imageshop-actions">
+					<button type="button" class="button-link imageshop-flush-cache" data-imageshop-id="%1$d" data-flush-nonce="%2$s">%3$s</button>
+					<span class="links-separator">|</span>
+					<button type="button" class="button-link imageshop-check-link" data-imageshop-id="%1$d">%4$s</button>
+					<span class="links-separator">|</span>
+					<button type="button" class="button-link imageshop-edit-toggle-visibility">%5$s</button>
+				</div>
+				<div class="imageshop-edit-form">%6$s</div>',
 				esc_attr( $post_id ),
 				esc_attr( wp_create_nonce( 'imageshop-flush-cache-' . $post_id ) ),
-				esc_html__( 'Regenerate Imageshop cache', 'imageshop-dam-connector' ),
+				esc_html__( 'Clear cache', 'imageshop-dam-connector' ),
+				esc_html__( 'Check image link', 'imageshop-dam-connector' ),
 				esc_html__( 'Edit Imageshop details', 'imageshop-dam-connector' ),
 				$output
 			);

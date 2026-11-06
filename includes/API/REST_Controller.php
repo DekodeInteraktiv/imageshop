@@ -37,6 +37,18 @@ class REST_Controller {
 	private const IMAGESHOP_API_GET_DOCUMENT_CONSENTS  = '/Document/GetConsents';
 
 	/**
+	 * Default timeout, in seconds, for requests to the Imageshop API.
+	 *
+	 * The WordPress default of 5 seconds is too short when Imageshop is busy.
+	 */
+	public const DEFAULT_REQUEST_TIMEOUT = 15;
+
+	/**
+	 * The maximum number of permalinks registered in a single API request.
+	 */
+	public const PERMALINK_BATCH_SIZE = 5;
+
+	/**
 	 * @var REST_Controller
 	 */
 	private static $instance;
@@ -91,7 +103,8 @@ class REST_Controller {
 	 */
 	public function __destruct() {
 		if ( ! empty( $this->queued_permalinks ) ) {
-			$this->generate_permalinks_url( $this->queued_permalinks );
+			$this->register_permalinks( $this->queued_permalinks );
+			$this->queued_permalinks = array();
 		}
 	}
 
@@ -230,6 +243,38 @@ class REST_Controller {
 	}
 
 	/**
+	 * Get the timeout, in seconds, used for requests to the Imageshop API.
+	 *
+	 * @return int
+	 */
+	public static function get_request_timeout(): int {
+		/**
+		 * Filters the timeout, in seconds, for requests to the Imageshop API.
+		 *
+		 * @param int $timeout Request timeout in seconds.
+		 */
+		return \max( 1, (int) \apply_filters( 'imageshop_api_request_timeout', self::DEFAULT_REQUEST_TIMEOUT ) );
+	}
+
+	/**
+	 * Get the maximum number of permalinks registered per API request.
+	 *
+	 * @return int
+	 */
+	public static function get_permalink_batch_size(): int {
+		/**
+		 * Filters how many permalinks are registered per API request.
+		 *
+		 * Capped at `REST_Controller::PERMALINK_BATCH_SIZE`, to avoid overloading the API.
+		 *
+		 * @param int $batch_size Number of permalinks per request.
+		 */
+		$batch_size = (int) \apply_filters( 'imageshop_permalink_batch_size', self::PERMALINK_BATCH_SIZE );
+
+		return \min( self::PERMALINK_BATCH_SIZE, \max( 1, $batch_size ) );
+	}
+
+	/**
 	 * Perform a request against the Imageshop API.
 	 *
 	 * @param string $url  The API endpoint to request.
@@ -238,6 +283,10 @@ class REST_Controller {
 	 * @return array|mixed
 	 */
 	public function execute_request( string $url, array $args ) {
+		if ( ! isset( $args['timeout'] ) ) {
+			$args['timeout'] = self::get_request_timeout();
+		}
+
 		try {
 			$response      = \wp_remote_request( $url, $args );
 			$response_code = \wp_remote_retrieve_response_code( $response );
@@ -418,19 +467,116 @@ class REST_Controller {
 	/**
 	 * Generate permalinks for the already prepared links from `self::create_peramlinks_url`.
 	 *
+	 * @deprecated Use register_permalinks(), which reports the outcome of each permalink.
+	 *
 	 * @param array $payloads An array of payloads to request asynchronous permalinks for at once.
 	 *
 	 * @return void
 	 */
 	public function generate_permalinks_url( $payloads ) {
-		$payload = $payloads;
+		$this->register_permalinks( (array) $payloads );
+	}
 
-		$args = array(
-			'method'  => 'POST',
-			'headers' => $this->get_headers(),
-			'body'    => \wp_json_encode( $payload ),
+	/**
+	 * Register permalinks with Imageshop, and report the outcome of each one.
+	 *
+	 * The API always returns HTTP 200, with one result per payload: `{CDN}/{token}` when
+	 * registered, `{CDN}/` when already registered, or an error message.
+	 *
+	 * @param array $payloads Permalink payloads, as built by build_permalink_payload().
+	 *
+	 * @return array<string, string|\WP_Error> Keyed by permalink token: `registered`, `exists`, or a WP_Error.
+	 */
+	public function register_permalinks( array $payloads ): array {
+		$results = array();
+		$prefix  = \untrailingslashit( self::IMAGESHOP_CDN_PREFIX ) . '/';
+
+		foreach ( \array_chunk( \array_values( $payloads ), self::get_permalink_batch_size() ) as $batch ) {
+			$response = \wp_remote_request(
+				self::IMAGESHOP_API_BASE_URL . self::IMAGESHOP_API_GET_PERMALINK_URL,
+				array(
+					'method'  => 'POST',
+					'timeout' => self::get_request_timeout(),
+					'headers' => $this->get_headers(),
+					'body'    => \wp_json_encode( $batch ),
+				)
+			);
+
+			$batch_error = null;
+			$body        = null;
+
+			if ( \is_wp_error( $response ) ) {
+				$batch_error = new \WP_Error( 'imageshop_permalink_request_failed', $response->get_error_message(), array( 'transient' => true ) );
+			} else {
+				$code = (int) \wp_remote_retrieve_response_code( $response );
+				$body = \json_decode( \wp_remote_retrieve_body( $response ) );
+
+				if ( ! \in_array( $code, array( 200, 201 ), true ) ) {
+					$batch_error = new \WP_Error(
+						'imageshop_permalink_http_error',
+						/* translators: %d: HTTP status code. */
+						\sprintf( \__( 'The Imageshop API responded with HTTP %d.', 'imageshop-dam-connector' ), $code ),
+						array( 'transient' => true )
+					);
+				} elseif ( ! \is_array( $body ) || \count( $body ) !== \count( $batch ) ) {
+					$batch_error = new \WP_Error( 'imageshop_permalink_invalid_response', \__( 'The Imageshop API returned an unexpected response.', 'imageshop-dam-connector' ), array( 'transient' => true ) );
+				}
+			}
+
+			foreach ( $batch as $index => $payload ) {
+				$token = (string) $payload['permalinktoken'];
+
+				if ( null !== $batch_error ) {
+					$results[ $token ] = $batch_error;
+					continue;
+				}
+
+				$url = isset( $body[ $index ]->url ) ? (string) $body[ $index ]->url : '';
+
+				if ( $prefix . $token === $url ) {
+					$results[ $token ] = 'registered';
+				} elseif ( $prefix === $url ) {
+					$results[ $token ] = 'exists';
+				} else {
+					$results[ $token ] = new \WP_Error(
+						'imageshop_permalink_rejected',
+						/* translators: %s: Error message returned by the Imageshop API. */
+						\sprintf( \__( 'Imageshop rejected the permalink: %s', 'imageshop-dam-connector' ), ( '' !== $url ? $url : \__( 'No reason given', 'imageshop-dam-connector' ) ) ),
+						array( 'transient' => false )
+					);
+				}
+			}
+		}
+
+		return $results;
+	}
+
+	/**
+	 * Build the payload for registering a permalink to the full, uncropped, original image.
+	 *
+	 * @param int    $document_id Imageshop document ID.
+	 * @param int    $width       Original image width.
+	 * @param int    $height      Original image height.
+	 * @param string $token       The complete permalink token, including the `-{W}x{H}` suffix.
+	 *
+	 * @return array
+	 */
+	public function build_permalink_payload( $document_id, $width, $height, $token ): array {
+		return array(
+			'language'        => $this->language,
+			'documentid'      => (int) $document_id,
+			'width'           => (int) $width,
+			'height'          => (int) $height,
+			'cropmode'        => 'ZOOM',
+			'x1'              => 0,
+			'y1'              => 0,
+			'x2'              => 100,
+			'y2'              => 100,
+			'previewwidth'    => 100,
+			'previewheight'   => 100,
+			'optionalurlhint' => $this->get_optional_url_hint(),
+			'permalinktoken'  => (string) $token,
 		);
-		$this->execute_request( self::IMAGESHOP_API_BASE_URL . self::IMAGESHOP_API_GET_PERMALINK_URL, $args );
 	}
 
 	public function create_subdocument_permalinks_url( $document_id, $subdocument_id, $permalink_token ) {
@@ -468,21 +614,7 @@ class REST_Controller {
 			$height
 		);
 
-		$this->queued_permalinks[] = array(
-			'language'        => $this->language,
-			'documentid'      => $document_id,
-			'width'           => $width,
-			'height'          => $height,
-			'cropmode'        => 'ZOOM',
-			'x1'              => 0,
-			'y1'              => 0,
-			'x2'              => 100,
-			'y2'              => 100,
-			'previewwidth'    => 100,
-			'previewheight'   => 100,
-			'optionalurlhint' => $this->get_optional_url_hint(),
-			'permalinktoken'  => $generated_uuid,
-		);
+		$this->queued_permalinks[] = $this->build_permalink_payload( $document_id, $width, $height, $generated_uuid );
 
 		return sprintf(
 			'%s/%s',

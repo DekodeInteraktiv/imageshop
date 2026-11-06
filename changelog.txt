@@ -1,3 +1,13 @@
+= 1.5.0 (2025-12-18) =
+* Media: Change the default setting for media uploads to not synchronize to Imageshop automatically, separating responsibilities.
+* Media: Made WebP conversion the default value for new installations.
+* Media: When deactivating the Imageshop integration, hide attachment references from the media library to create a better user experience.
+* Media: Add filter options for media types to the media library screen.
+* Media: Consistently display thumbnails for video files.
+* Media: Keep showing previews of non-image media when viewing media details in the media library.
+* Media Modal: Hide the media type filter from the modal inserter, as it is context aware and plays no role with the Imageshop plugin active.
+* Onboarding: Add notice to onboarding flow about the potential conflicts multiple media management plugins can have with each other.
+
 = 1.4.0 (2025-11-28) =
 * Feature: Added support for SVG vector images.
 * Bugfix: Fixed an issue where you might not get a status response when testing a new API key in the settings panel.

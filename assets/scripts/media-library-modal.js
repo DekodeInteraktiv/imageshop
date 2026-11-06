@@ -322,19 +322,199 @@
 	});
 })();
 
+/* global ImageshopMediaLibrary, _ */
+
+/**
+ * Prepare Imageshop media before it is inserted.
+ *
+ * Imageshop URLs only work once confirmed, so unconfirmed media is registered when a
+ * selection button (Select, Insert, etc.) is clicked, never while browsing.
+ */
+( function () {
+	if (
+		! window.wp ||
+		! wp.media ||
+		! wp.media.view ||
+		! wp.apiFetch ||
+		! window.ImageshopMediaLibrary
+	) {
+		return;
+	}
+
+	const labels = ImageshopMediaLibrary.labels.prepare;
+
+	const getPending = function ( view ) {
+		const state =
+			view.controller && view.controller.state && view.controller.state();
+		const selection = state && state.get( 'selection' );
+
+		return selection && selection.models
+			? selection.filter( ( model ) => model.get( 'imageshopPending' ) )
+			: null;
+	};
+
+	const prepare = function ( models ) {
+		models.forEach( ( model ) =>
+			model.set( { imageshopPreparing: true, imageshopError: null } )
+		);
+		if ( wp.a11y && wp.a11y.speak ) {
+			wp.a11y.speak( labels.preparing );
+		}
+
+		return Promise.all(
+			_.chunk( models, 50 ).map( ( chunk ) =>
+				wp
+					.apiFetch( {
+						path: '/imageshop/v1/attachments/prepare',
+						method: 'POST',
+						data: {
+							ids: chunk.map( ( model ) => model.get( 'id' ) ),
+						},
+					} )
+					.then( ( response ) => {
+						const items = ( response && response.items ) || {};
+
+						chunk.forEach( ( model ) => {
+							const item = items[ model.get( 'id' ) ];
+
+							model.set(
+								item && item.success
+									? Object.assign( {}, item.attachment, {
+											imageshopPending: false,
+											imageshopPreparing: false,
+											imageshopError: null,
+										} )
+									: {
+											imageshopPreparing: false,
+											imageshopError:
+												( item && item.message ) ||
+												labels.failed,
+										}
+							);
+						} );
+					} )
+					.catch( ( error ) =>
+						chunk.forEach( ( model ) =>
+							model.set( {
+								imageshopPreparing: false,
+								imageshopError:
+									( error && error.message ) || labels.failed,
+							} )
+						)
+					)
+			)
+		).then( () => {
+			const prepared = models.every(
+				( model ) => ! model.get( 'imageshopPending' )
+			);
+
+			if ( ! prepared ) {
+				// eslint-disable-next-line no-alert
+				window.alert(
+					[ labels.failed ]
+						.concat(
+							_.uniq(
+								models
+									.map( ( model ) =>
+										model.get( 'imageshopError' )
+									)
+									.filter( Boolean )
+							)
+						)
+						.join( '\n\n' )
+				);
+			}
+
+			return prepared;
+		} );
+	};
+
+	const Button = wp.media.view.Button;
+	const buttonClick = Button.prototype.click;
+
+	Button.prototype.click = function ( event ) {
+		const requiresSelection =
+			this.options.requires && this.options.requires.selection;
+		const pending = requiresSelection ? getPending( this ) : null;
+
+		if ( ! pending || ! pending.length || this.model.get( 'disabled' ) ) {
+			return buttonClick.apply( this, arguments );
+		}
+
+		event.preventDefault();
+
+		prepare( pending ).then( ( prepared ) => {
+			// The modal may have been closed while waiting.
+			if ( prepared && this.$el.is( ':visible' ) ) {
+				buttonClick.call( this, event );
+			}
+		} );
+	};
+
+	const Toolbar = wp.media.view.Toolbar;
+	const toolbarInitialize = Toolbar.prototype.initialize;
+	const toolbarRefresh = Toolbar.prototype.refresh;
+
+	Toolbar.prototype.initialize = function () {
+		toolbarInitialize.apply( this, arguments );
+
+		if ( this.selection ) {
+			this.selection.on(
+				'change:imageshopPreparing',
+				this.refresh,
+				this
+			);
+		}
+	};
+
+	Toolbar.prototype.refresh = function () {
+		toolbarRefresh.apply( this, arguments );
+
+		const preparing = ( getPending( this ) || [] ).some( ( model ) =>
+			model.get( 'imageshopPreparing' )
+		);
+
+		// Show progress in the selection buttons, and restore their text afterwards.
+		_.each( this._views, ( button ) => {
+			if (
+				! button.model ||
+				! button.options ||
+				! button.options.requires ||
+				! button.options.requires.selection
+			) {
+				return;
+			}
+
+			if ( preparing ) {
+				button.imageshopText =
+					button.imageshopText || button.model.get( 'text' );
+				button.model.set( { disabled: true, text: labels.preparing } );
+			} else if ( button.imageshopText ) {
+				button.model.set( 'text', button.imageshopText );
+				delete button.imageshopText;
+			}
+		} );
+	};
+} )();
 jQuery( document ).ready( function( $ ) {
 	$( document ).on( 'click', '.imageshop-edit-cancel', function( event ) {
 		event.preventDefault();
 
 		$( '.imageshop-edit-form' ).hide();
 		$( '.imageshop-edit-form-feedback' ).hide();
-		$( '.imageshop-edit-toggle-visibility' ).show();
+		$( '.imageshop-edit-toggle-visibility' )
+			.prev( '.links-separator' )
+			.addBack()
+			.show();
 	} );
 	$( document ).on( 'click', '.imageshop-edit-toggle-visibility', function( event ) {
 		event.preventDefault();
 
 		$( '.imageshop-edit-form' ).show();
-		$( '.imageshop-edit-toggle-visibility' ).hide();
+		$( '.imageshop-edit-toggle-visibility' )
+			.prev( '.links-separator' )
+			.addBack()
+			.hide();
 	} );
 	$( document ).on( 'click', '.imageshop_perform_edit', function( event ) {
 		event.preventDefault();
@@ -396,6 +576,40 @@ jQuery( document ).ready( function( $ ) {
 			.fail( function ( response ) {
 				console.log( response );
 				feedbackWrapper.addClass( 'notice-error' ).text( response.responseJSON.message ).show();
+			} );
+	} );
+
+	$( document ).on( 'click', '.imageshop-check-link', function( event ) {
+		event.preventDefault();
+
+		const button = $( this );
+		const feedbackWrapper = $( '.imageshop-ajax-generic-feedback' );
+
+		feedbackWrapper
+			.removeClass( 'notice-error' )
+			.removeClass( 'notice-success' )
+			.removeClass( 'notice-warning' )
+			.hide();
+
+		button.prop( 'disabled', true );
+
+		$.ajax( {
+			type: 'POST',
+			url: ImageshopMediaLibrary.rest_url.check_link,
+			data: {
+				_wpnonce: ImageshopMediaLibrary.nonce.rest,
+				id: button.data( 'imageshop-id' )
+			},
+			dataType: 'json'
+		} )
+			.done( function ( response ) {
+				feedbackWrapper.addClass( 'notice-success' ).text( response.message ).show();
+			} )
+			.fail( function ( response ) {
+				feedbackWrapper.addClass( 'notice-error' ).text( response.responseJSON ? response.responseJSON.message : response.statusText ).show();
+			} )
+			.always( function () {
+				button.prop( 'disabled', false );
 			} );
 	} );
 } );
